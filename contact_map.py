@@ -51,9 +51,20 @@ def main(file, atom):
 if __name__ == "__main__":
     msg = 'A module that calculates distance map'
     argparser = argparse.ArgumentParser(description=msg)
-    argparser.add_argument("file", help="PDB structure to analyze.")
-    argparser.add_argument("-a", "--atom",
-                           help="Atom to calculate distance with.",
-                           default="CA", choices=["CA", "CB", "N"])
+    argparser.add_argument("file.pdb", help="PDB structure to analyze.")
+    argparser.add_argument("-a",
+                           help="""Atom to calculate distance with\n
+                           CA: Carbon Alpha, CB: Carbon Beta""",
+                           default="CA", choices=["CA", "CB"])
+    sizes = {"CA": 15, "CB": 12}
     args = argparser.parse_args()
-    main(args.file, args.atom)
+    dist_map = main(args.file, args.atom)
+#     
+#     for c in range(dist_map.size()):
+#         for b in range(dist_map.size()):
+#             if abs(c-b) <= 3:
+#                 return " "
+#             elif dist_map[b][c] <= sizes[args.atom]:
+#                 return "*"
+#             else:
+#                 return " "
