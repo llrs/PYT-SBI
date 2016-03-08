@@ -10,6 +10,8 @@ From: http://www2.warwick.ac.uk/fac/sci/moac/people/students/peter_cock/
 '''
 
 from Bio.PDB.PDBParser import PDBParser
+from Bio import SeqIO
+
 import numpy as np
 import argparse
 
@@ -51,20 +53,35 @@ def main(file, atom):
 if __name__ == "__main__":
     msg = 'A module that calculates distance map'
     argparser = argparse.ArgumentParser(description=msg)
-    argparser.add_argument("file.pdb", help="PDB structure to analyze.")
+    argparser.add_argument("file", help="PDB structure to analyze.")
     argparser.add_argument("-a",
                            help="""Atom to calculate distance with\n
                            CA: Carbon Alpha, CB: Carbon Beta""",
                            default="CA", choices=["CA", "CB"])
-    sizes = {"CA": 15, "CB": 12}
+
     args = argparser.parse_args()
-    dist_map = main(args.file, args.atom)
-#     
-#     for c in range(dist_map.size()):
-#         for b in range(dist_map.size()):
-#             if abs(c-b) <= 3:
-#                 return " "
-#             elif dist_map[b][c] <= sizes[args.atom]:
-#                 return "*"
-#             else:
-#                 return " "
+    dist_map = main(args.file, args.a)
+
+    for record in SeqIO.parse(args.file, "pdb-seqres"):
+        print("%s %i" % (record.id, len(record)))
+
+    def contact_map(distance_map):
+        sizes = {"CA": 15, "CB": 12}
+        size = len(distance_map)
+        print(size)
+        answer = np.zeros((size, size), str)
+        contact = 0
+        for c in range(size):
+            for b in range(size):
+                # To avoid marking as contacting atoms those who simply are
+                # Close in the sequence
+                if abs(c-b) <= 3:
+                    answer[c][b] = " "
+                elif dist_map[b][c] <= sizes[args.a]:
+                    contact += 1
+                    answer[c][b] = "*"
+                else:
+                    answer[c][b] = " "
+        print(contact)
+
+    contact_map(dist_map)

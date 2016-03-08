@@ -13,10 +13,10 @@ import contact_map as cm
 if __name__ == '__main__':
     msg = 'Predicts correlation between mutation and sturcture'
     argparser = argparse.ArgumentParser(description=msg)
-    argparser.add_argument("file.pdb", help="PDB structure to analyze.")
-    argparser.add_argument("-a", "--atom",
+    argparser.add_argument("file", help="PDB structure to analyze.")
+    argparser.add_argument("-a", 
                            help="Atom to calculate distance with.",
-                           default="CA", choices=["CA", "CB", "N"])
+                           default="CA", choices=["CA", "CB"])
     args = argparser.parse_args()
 
     cm.main(args.file, args.atom)
