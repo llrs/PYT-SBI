@@ -37,11 +37,10 @@ def main(file, atom):
     """Creates the distance map between aminoacids of a given pdb."""
     parser = PDBParser(PERMISSIVE=1)
     structure = parser.get_structure("test", file)
-    # for model in structure:
 
     residues = tuple(structure.get_residues())
-
     # Filter those who are not an aminoacid
+
     residues = tuple(filter(lambda x: x.id[0] == " ", residues))
 
     dist_matrix = calc_dist_matrix(residues, atom)
@@ -49,6 +48,23 @@ def main(file, atom):
     print("Minimum distance", np.min(dist_matrix))
     print("Maximum distance", np.max(dist_matrix))
     return dist_matrix
+
+def contact_map(distance_map):
+        sizes = {"CA": 15, "CB": 12}
+        size = len(distance_map)
+        print(size)
+        answer = np.zeros((size, size), str)
+        for c in range(size):
+            for b in range(size):
+                # To avoid marking as contacting atoms those who simply are
+                # Close in the sequence but to catch Beta-turns which are
+                # of 4 residues the minimum distance is 3
+                if abs(c-b) <= 2:
+                    answer[c][b] = " "
+                elif dist_map[b][c] <= sizes[args.a]:
+                    answer[c][b] = "*"
+                else:
+                    answer[c][b] = " "
 
 if __name__ == "__main__":
     msg = 'A module that calculates distance map'
@@ -60,28 +76,6 @@ if __name__ == "__main__":
                            default="CA", choices=["CA", "CB"])
 
     args = argparser.parse_args()
-    dist_map = main(args.file, args.a)
-
-    for record in SeqIO.parse(args.file, "pdb-seqres"):
-        print("%s %i" % (record.id, len(record)))
-
-    def contact_map(distance_map):
-        sizes = {"CA": 15, "CB": 12}
-        size = len(distance_map)
-        print(size)
-        answer = np.zeros((size, size), str)
-        contact = 0
-        for c in range(size):
-            for b in range(size):
-                # To avoid marking as contacting atoms those who simply are
-                # Close in the sequence
-                if abs(c-b) <= 3:
-                    answer[c][b] = " "
-                elif dist_map[b][c] <= sizes[args.a]:
-                    contact += 1
-                    answer[c][b] = "*"
-                else:
-                    answer[c][b] = " "
-        print(contact)
+    dist_map = main(args.file, args.a)    
 
     contact_map(dist_map)
