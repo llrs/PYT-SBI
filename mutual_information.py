@@ -33,7 +33,7 @@ def prune_first_gaps(aln):
 	
 	listcol = []
 	for i in range(aln.get_alignment_length()):
-		if aln[0].seq[i] != '-':
+		if aln[0].seq[i] == '-':
 			listcol.append(i)
 	return prune(aln,listcol)
 	
@@ -141,7 +141,7 @@ def CPS(aln, col1, col2, base=20):
 	for k in range(n):
 		if k != col1 and k != col2:
 			cps += m[col1,k]*m[k,col2]
-	cps *= 1/(n-2)
+	cps = cps/(n-2)
 	return cps
 	
 def NCPS_matrix(aln, base=20):
@@ -166,9 +166,9 @@ def NCPS_matrix(aln, base=20):
 			else:
 				cps_matrix[i,j] = copy.copy(cps_matrix[j,i])
 			den += cps_matrix[i,j]
-	den *= 1/(n*(n-1))
+	den = den/(n*(n-1))
 	den = math.sqrt(den)
-	return cps_matrix*1/den
+	return cps_matrix * 1/den
 
 def mutual_info_c(aln):
 
@@ -178,13 +178,14 @@ def mutual_info_c(aln):
 			
 
 if __name__ == "__main__":
-	alignment = AlignIO.read("./data/alignlist2.aln", "clustal")
+	alignment = AlignIO.read("./data/alignlist.aln", "clustal")
 	
-	alignment2 = MultipleSeqAlignment([
-            SeqRecord(Seq("-ACTGC-TATTTG--CTAG", generic_dna), id="Alpha"),
-            SeqRecord(Seq("-ACT-C-TATTTG--CTAG", generic_dna), id="Beta"),
-            SeqRecord(Seq("-ACTGC-TATTTG-LDTAG", generic_dna), id="Gamma"),
-         ])
+#	alignment = MultipleSeqAlignment([
+#            SeqRecord(Seq("MATGCTATTT", generic_protein), id="Alpha"),
+#            SeqRecord(Seq("MAGTCTATGT", generic_protein), id="Beta"),
+#            SeqRecord(Seq("MLTTCATTTG", generic_protein), id="Gamma"),
+#            SeqRecord(Seq("MLGTCATTGG", generic_protein), id="Delta"),
+#         ])
 		
 #	alignarray = numpy.array([list(rec) for rec in alignment], numpy.character)
 #	print("Array shape %d by %d" %alignarray.shape)
@@ -193,6 +194,7 @@ if __name__ == "__main__":
 #	print("Array shape %d by %d" %alignarray.shape)	
 
 	edited = prune_first_gaps(alignment)
+	print(edited)
 	myarray = NCPS_matrix(edited)
 	mi_matrix = mutual_info_matrix(edited,20)
 	MIc_matrix = mutual_info_matrix(edited,20)-myarray
