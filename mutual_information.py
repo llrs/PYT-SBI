@@ -5,6 +5,7 @@ from Bio.Align import MultipleSeqAlignment
 from Bio.Alphabet import generic_dna, generic_protein
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
+import matplotlib.pyplot as plt
 import numpy
 import copy
 import math
@@ -77,7 +78,10 @@ def joint_column_frequencies(aln, col1, col2):
 
 def entropy(aln, col, base):
 
-	""" It returns the entropy for column col in aln """
+	""" 
+	It returns the entropy for column col in the MultipleSeqAlignment
+	object aln 
+	"""
 	
 	freq = column_frequencies(aln, col)
 	entropy = 0
@@ -88,7 +92,9 @@ def entropy(aln, col, base):
 	
 def joint_entropy(aln, col1, col2, base):
 
-	""" It returns the joint entropy for col1 and col2 in aln """
+	""" 
+	It returns the joint entropy for col1 and col2 in the 
+	MultipleSeqAlignment object aln """
 	
 	joint_freq = joint_column_frequencies(aln, col1, col2)
 	jentropy = 0
@@ -99,15 +105,16 @@ def joint_entropy(aln, col1, col2, base):
 	
 def mutual_info(aln, col1, col2, base=20):
 	
-	""" It returns the mutual information of a pair of columns"""
+	""" It returns the MI of a pair of columns"""
 	
 	return entropy(aln, col1, base) + entropy(aln, col2, base) - joint_entropy(aln, col1, col2, base)
 	
 def mutual_info_matrix(aln, base=20):
 	
 	""" 
-	It returns a square matrix of size len(aln) with mutual 
-	information values for each pair of positions in aln
+	It returns a square matrix of size len(aln) with MI 
+	values for each pair of positions in the MultipleSeqAlignment
+	object aln
 	"""
 	
 	n = aln.get_alignment_length()
@@ -124,7 +131,8 @@ def CPS(aln, col1, col2, base=20):
 	
 	""" 
 	It returns the pairwise co-evolutionary pattern similarity
-	for a pair of columns col1 and col2 of aln
+	for a pair of columns col1 and col2 of the MultipleSeqAlignment
+	object aln
 	"""
 	
 	n = aln.get_alignment_length()
@@ -164,7 +172,7 @@ def NCPS_matrix(aln, base=20):
 
 def mutual_info_c(aln):
 
-	"""It returns MIc for a pair of columns col1 and col2 of aln"""
+	"""It returns the MIc matrix for aln"""
 	
 	return mutual_info_matrix(aln) - NCPS_matrix(aln)
 			
@@ -174,27 +182,50 @@ if __name__ == "__main__":
 	
 	alignment2 = MultipleSeqAlignment([
             SeqRecord(Seq("-ACTGC-TATTTG--CTAG", generic_dna), id="Alpha"),
-             SeqRecord(Seq("-ACT-C-TATTTG--CTAG", generic_dna), id="Beta"),
-             SeqRecord(Seq("-ACTGC-TATTTG-LDTAG", generic_dna), id="Gamma"),
+            SeqRecord(Seq("-ACT-C-TATTTG--CTAG", generic_dna), id="Beta"),
+            SeqRecord(Seq("-ACTGC-TATTTG-LDTAG", generic_dna), id="Gamma"),
          ])
 		
-	#alignarray = numpy.array([list(rec) for rec in alignment], numpy.character)
-	#print("Array shape %d by %d" %alignarray.shape)
+#	alignarray = numpy.array([list(rec) for rec in alignment], numpy.character)
+#	print("Array shape %d by %d" %alignarray.shape)
 
-	alignarray = numpy.array([list(rec) for rec in alignment], numpy.character)
-	print("Array shape %d by %d" %alignarray.shape)
-	
+#	alignarray = numpy.array([list(rec) for rec in edited], numpy.character)
+#	print("Array shape %d by %d" %alignarray.shape)	
+
 	edited = prune_first_gaps(alignment)
-	print(mutual_info(edited, 70, 74))
-	print(CPS(edited, 70, 74, 20))
 	myarray = NCPS_matrix(edited)
-	print(myarray[70,74])
-	print(mutual_info_matrix(edited,20))
-	print(NCPS_matrix(edited))
+	mi_matrix = mutual_info_matrix(edited,20)
+	MIc_matrix = mutual_info_matrix(edited,20)-myarray
+	print(mi_matrix)
+	print(myarray)
+	print(MIc_matrix)
 	
-	
-	alignarray = numpy.array([list(rec) for rec in edited], numpy.character)
-	print("Array shape %d by %d" %alignarray.shape)
+	# plot 1
+	plt.imshow(mutual_info_matrix(edited,20), interpolation='none')
+	heatmap = plt.pcolormesh(mutual_info_matrix(edited,20))
+	plt.title('Fancy MI Heatmap')
+	legend = plt.colorbar(heatmap)
+	legend.set_label("MI")
+	plt.savefig('fancy_heatmap_file1.png')
+	fig = plt.figure()
+	fig.show()
 
-#	my_alignments = [alignment, edited]
-#	AlignIO.write(my_alignments, "./data/example.aln", "clustal")
+	# plot 2
+	plt.imshow(myarray, interpolation='none')
+	heatmap = plt.pcolormesh(myarray)
+	plt.title('Fancy NCPS Heatmap')
+	legend = plt.colorbar(heatmap)
+	legend.set_label("NCPS")
+	plt.savefig('fancy_heatmap_file2.png')
+	fig = plt.figure()
+	fig.show()
+	
+	# plot 3
+	plt.imshow(MIc_matrix, interpolation='none')
+	heatmap = plt.pcolormesh(MIc_matrix)
+	plt.title('Fancy MIc Heatmap')
+	legend = plt.colorbar(heatmap)
+	legend.set_label("MIc")
+	plt.savefig('fancy_heatmap_file3.png')
+	fig = plt.figure()
+	fig.show()
