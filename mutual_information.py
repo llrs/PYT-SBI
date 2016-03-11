@@ -161,7 +161,7 @@ def NCPS_matrix(aln, base=20):
 			if j <= i:
 				for k in range(n):
 					if k != i and k != j: 
-						cps += m[i,k]*m[k,i]
+						cps += m[i,k]*m[k,j]
 				cps_matrix[i,j] = cps
 			else:
 				cps_matrix[i,j] = copy.copy(cps_matrix[j,i])
