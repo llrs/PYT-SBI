@@ -162,7 +162,7 @@ def NCPS_matrix(aln, base=20):
 				for k in range(n):
 					if k != i and k != j: 
 						cps += m[i,k]*m[k,j]
-				cps_matrix[i,j] = cps
+				cps_matrix[i,j] = cps / (n-2)
 			else:
 				cps_matrix[i,j] = copy.copy(cps_matrix[j,i])
 			den += cps_matrix[i,j]
@@ -195,16 +195,16 @@ if __name__ == "__main__":
 
 	edited = prune_first_gaps(alignment)
 	print(edited)
-	myarray = NCPS_matrix(edited)
-	mi_matrix = mutual_info_matrix(edited,20)
-	MIc_matrix = mutual_info_matrix(edited,20)-myarray
+	myarray = NCPS_matrix(edited,2)
+	mi_matrix = mutual_info_matrix(edited,2)
+	MIc_matrix = mi_matrix-myarray
 	print(mi_matrix)
 	print(myarray)
 	print(MIc_matrix)
 	
 	# plot 1
-	plt.imshow(mutual_info_matrix(edited,20), interpolation='none')
-	heatmap = plt.pcolormesh(mutual_info_matrix(edited,20))
+	plt.imshow(mi_matrix, interpolation='none')
+	heatmap = plt.pcolormesh(mi_matrix)
 	plt.title('Fancy MI Heatmap')
 	legend = plt.colorbar(heatmap)
 	legend.set_label("MI")
