@@ -11,17 +11,22 @@ From: http://www2.warwick.ac.uk/fac/sci/moac/people/students/peter_cock/
 import numpy as np
 import argparse
 import logging
-import matplotlib.pyplot as plt
 import os
 
 from Bio.PDB.PDBParser import PDBParser
+import matplotlib.pyplot as plt
 
 
 def calc_residue_dist(residue_one, residue_two, atom):
     """Returns the distance between two residues between the selected atom."""
     logging.debug("Calculating distance between {} and {} at {} atom.".format(
                  residue_one.id, residue_two.id, atom))
-    distance = residue_one[atom] - residue_two[atom]
+    if atom is None:
+        min()
+        for a in ("CA", "CB"):
+            distance = residue_one.get(a) - residue_two.get(a)
+    else:
+        distance = residue_one[atom] - residue_two[atom]
     return distance
 
 
@@ -37,16 +42,16 @@ def calc_min_dist(residue_one, residue_two):
     return min(distances)
 
 
-def comp_dist(residue_one, residue_two):
-    """Compares if there is any difference distances"""
-    logging.debug("comparingdistance between {} and {}.".format(
-                 residue_one.id, residue_two.id))
-    CA_dist = calc_residue_dist(residue_one, residue_two, "CA")
-    min_dist = calc_min_dist(residue_one, residue_two)
-    if CA_dist > 12 and min_dist < 6:
-        return 1
-    else:
-        return 0
+# def comp_dist(residue_one, residue_two):
+#     """Compares if there is any difference distances"""
+#     logging.debug("comparingdistance between {} and {}.".format(
+#                  residue_one.id, residue_two.id))
+#     CA_dist = calc_residue_dist(residue_one, residue_two, "CA")
+#     min_dist = calc_min_dist(residue_one, residue_two)
+#     if CA_dist > 12 and min_dist < 6:
+#         return 1
+#     else:
+#         return 0
 
 
 def calc_dist_matrix(chain, atom):
@@ -56,19 +61,11 @@ def calc_dist_matrix(chain, atom):
     answer = np.zeros((size, size), np.float)
     for row, residue_one in enumerate(chain):
         for col, residue_two in enumerate(chain):
-            answer[row, col] = calc_residue_dist(residue_one, residue_two,
-                                                 atom)
-    return answer
-
-
-def calc_mdist_matrix(chain):
-    """Returns a matrix of distances between two chains."""
-    logging.debug("Calculating distance matrix for {}".format(chain))
-    size = len(chain)
-    answer = np.zeros((size, size), np.float)
-    for row, residue_one in enumerate(chain):
-        for col, residue_two in enumerate(chain):
-            answer[row, col] = calc_min_dist(residue_one, residue_two)
+            if atom == min or atom is None:
+                answer[row, col] = calc_min_dist(residue_one, residue_two)
+            else:
+                answer[row, col] = calc_residue_dist(residue_one, residue_two,
+                                                     atom)
     return answer
 
 
@@ -130,7 +127,7 @@ def contact_map(distance_map, atom):
             # of 4 residues the minimum distance is 3
             if abs(c-b) <= 2:
                 pass
-            elif dist_map[c][b] <= sizes[atom]:
+            elif dist_map[c][b] < sizes[atom]:
                 contact += 1
                 answer[c][b] = True #dist_map[c][b]
 #             else:
