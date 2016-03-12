@@ -94,7 +94,7 @@ def contact_map(distance_map, atom):
                                                                     atom))
     sizes = {"CA": 15, "CB": 12, None: 6}
     size = len(distance_map)
-    answer = np.ones((size, size), dtype=bool)
+    answer = np.zeros((size, size), dtype=bool)
     contact = 0
     for c in range(size):
         for b in range(size):
@@ -103,11 +103,44 @@ def contact_map(distance_map, atom):
             # of 4 residues the minimum distance is 3
             if abs(c-b) <= 2:
                 pass
-            elif distance_map[c][b] < sizes[atom]:
+            elif distance_map[c][b] <= sizes[atom]:
                 contact += 1
                 answer[c][b] = True
     logging.info("Found {} contacts between residues.".format(contact/2))
     return(answer)
+
+
+def plot_distance(distances, name_file, option):
+    """Plots the distances between the residues."""
+    logging.info("Plotting the distance map for {}".format(name_f))
+    plt.imshow(distances, interpolation='none')
+    heatmap = plt.pcolormesh(distances)
+    plt.title('Distances of the file {}'.format(name_file))
+    legend = plt.colorbar(heatmap)
+    legend.set_label("Angstroms")
+    if option is None:
+        option = "min"
+    plt.savefig('distance_map_{}_{}.png'.format(name_file, args.a, option),
+                format="png")
+
+
+def plot_contacts(contacts, name_file, option):
+    """Plots the contact map between residues"""
+    logging.info("Plotting the contact map for {}".format(name_file))
+#     plt.imshow(contacts, interpolation='none')
+#     plt.imshow(contacts, aspect="auto", cmap=plt.cm.gray,
+#                          interpolation="nearest")
+#     plt.title("Contacts between the residues of {}".format(name_file))
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    fig.suptitle("Contact between residues of {}".format(name_file))
+    ax.imshow(contacts, aspect='auto',
+              cmap=plt.cm.gray, interpolation='nearest')
+    if option is None:
+        option = "min"
+    plt.savefig("contact_map_{}_{}.png".format(name_f, args.a, option),
+                format="png")
+
 
 if __name__ == "__main__":
 
@@ -132,23 +165,8 @@ if __name__ == "__main__":
     structure = parser.get_structure("test", args.file)
 
     residues = filter_residues(structure)
-    dist_matrix = calc_dist_matrix(structure, args.a)
+    dist_matrix = calc_dist_matrix(residues, args.a)
+    plot_distance(dist_matrix, name_f, args.a)
     cont_matrix = contact_map(dist_matrix, args.a)
-
-#     # Plot the distance map
-#     plt.imshow(dist_map, interpolation='none')
-#     heatmap = plt.pcolormesh(dist_map)
-#     plt.title('Heat map of the file {}'.format(name_f))
-#     legend = plt.colorbar(heatmap)
-#     legend.set_label("Angstroms")
-#     plt.savefig('distance_map_{}_{}.png'.format(name_f, args.a))
-# 
-#     logging.captureWarnings(False)
-# 
-#     fig = plt.figure()
-#     ax = fig.add_subplot(111)
-# 
-#     ax.imshow(cont_map, aspect='auto',
-#               cmap=plt.cm.gray, interpolation='nearest')
-#     fig.savefig("contact_map_{}_{}.png".format(name_f, args.a))
-#     fig.show()
+    plot_contacts(cont_matrix, name_f, args.a)
+    logging.captureWarnings(False)
