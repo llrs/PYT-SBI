@@ -22,9 +22,14 @@ def calc_residue_dist(residue_one, residue_two, atom):
     logging.debug("Calculating distance between {} and {} at {} atom.".format(
                  residue_one.id, residue_two.id, atom))
     if atom is None:
-        min()
+        distance = []
         for a in ("CA", "CB"):
-            distance = residue_one.get(a) - residue_two.get(a)
+            try:
+                distance.append(residue_one[a] - residue_two[a])
+            except KeyError:
+                continue
+        else:
+            distance = min(distance)
     else:
         distance = residue_one[atom] - residue_two[atom]
     return distance
@@ -55,7 +60,7 @@ def calc_min_dist(residue_one, residue_two):
 
 
 def calc_dist_matrix(chain, atom):
-    """Returns a matrix of distances between two chains."""
+    """Returns a matrix of distances between residues of the same chain."""
     logging.debug("Calculating distance matrix for {}".format(chain))
     size = len(chain)
     answer = np.zeros((size, size), np.float)
@@ -66,33 +71,13 @@ def calc_dist_matrix(chain, atom):
             else:
                 answer[row, col] = calc_residue_dist(residue_one, residue_two,
                                                      atom)
+    logging.info("Minimum distance {}".format(np.min(answer)))
+    logging.info("Maximum distance {}".format(np.max(answer)))
     return answer
 
 
-def calc_matrix(chain):
-    """Calculate those who happen to meet the threeshold """
-    logging.debug("Calculating distance matrix for {}".format(chain))
-    size = len(chain)
-    answer = np.zeros((size, size), np.float)
-    for row, residue_one in enumerate(chain):
-        for col, residue_two in enumerate(chain):
-            distance = []
-            for atom1 in residue_one:
-                for atom2 in residue_two:
-                    distance.append(atom1 - atom2)
-            answer[row, col] = calc_min_dist(residue_one, residue_two)
-    return answer
-
-
-def calc_relevant(chain):
-    """Count how many non-identified positions by CA"""
-    val = sum([comp_dist(residue_one, residue_two) for residue_one in chain
-               for residue_two in chain])
-    print(val)
-
-
-def main(structure, atom=None):
-    """Creates the distance map between standard amino acids of a given pdb."""
+def filter_residues(structure):
+    """Filters non-standard amino acids of the structure."""
     logging.debug("Reading residues of structure {}".format(structure))
     residues = tuple(structure.get_residues())
     # Filter those who are not an aminoacid
@@ -100,16 +85,7 @@ def main(structure, atom=None):
     logging.info("Filtering non-standard residues")
     residues = tuple(filter(lambda x: x.id[0] == " ", residues))
     logging.debug("Remaining {} residues.".format(len(residues)))
-
-#     if atom is None:
-#         dist_matrix = calc_mdist_matrix(residues)
-#     else:
-#         dist_matrix = calc_dist_matrix(residues, atom)
-    calc_relevant(residues)
-    # TODO: Do a properly system log
-#     logging.info("Minimum distance {}".format(np.min(dist_matrix)))
-#     logging.info("Maximum distance {}".format(np.max(dist_matrix)))
-#     return dist_matrix
+    return residues
 
 
 def contact_map(distance_map, atom):
@@ -118,7 +94,7 @@ def contact_map(distance_map, atom):
                                                                     atom))
     sizes = {"CA": 15, "CB": 12, None: 6}
     size = len(distance_map)
-    answer = [[False for j in range(size)] for i in range(size)]
+    answer = np.ones((size, size), dtype=bool)
     contact = 0
     for c in range(size):
         for b in range(size):
@@ -127,11 +103,9 @@ def contact_map(distance_map, atom):
             # of 4 residues the minimum distance is 3
             if abs(c-b) <= 2:
                 pass
-            elif dist_map[c][b] < sizes[atom]:
+            elif distance_map[c][b] < sizes[atom]:
                 contact += 1
-                answer[c][b] = True #dist_map[c][b]
-#             else:
-#                 answer[c][b] = 30
+                answer[c][b] = True
     logging.info("Found {} contacts between residues.".format(contact/2))
     return(answer)
 
@@ -157,9 +131,10 @@ if __name__ == "__main__":
     logging.captureWarnings(True)
     structure = parser.get_structure("test", args.file)
 
-    dist_map = main(structure, args.a)
-#     cont_map = contact_map(dist_map, args.a)
-# 
+    residues = filter_residues(structure)
+    dist_matrix = calc_dist_matrix(structure, args.a)
+    cont_matrix = contact_map(dist_matrix, args.a)
+
 #     # Plot the distance map
 #     plt.imshow(dist_map, interpolation='none')
 #     heatmap = plt.pcolormesh(dist_map)
