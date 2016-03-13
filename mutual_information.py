@@ -3,7 +3,6 @@
 Deals with computations related to mutual information, phylogenetic
 signals and structural/functional correlation signals from data 
 encoded in multiple sequence alignments.
-
 Created on Mar 7, 2016
 @author: Leo, Lluís, Ferran
 """
@@ -78,7 +77,10 @@ def column_frequencies(aln, col):
 	freq = dict.fromkeys(alphabet,0)
 	column = aln[:,col]
 	for char in column:
-		freq[char] += 1
+		try:
+			freq[char] += 1
+		except KeyError:
+			pass
 	for key in freq:
 		freq[key] = freq[key]/len(column)
 	return freq
@@ -98,7 +100,10 @@ def joint_column_frequencies(aln, col1, col2):
 	columnx = aln[:,col1]
 	columny = aln[:,col2]
 	for i in range(len(aln)):
-		freq[(columnx[i],columny[i])] += 1
+		try:
+			freq[(columnx[i],columny[i])] += 1
+		except KeyError:
+			pass
 	for key in freq:
 		freq[key] = freq[key]/len(aln)
 	return freq
@@ -273,7 +278,7 @@ def retrieve_residue_positions(binary_matrix, gap_list, extreme_list):
 			if binary_matrix[i,j] == 1:
 				res1 = reconstruct_position(reconstruct_position(i,extreme_list),gap_list)
 				res2 = reconstruct_position(reconstruct_position(j,extreme_list),gap_list)
-				set_pairs.add(frozenset([res1,res2]))
+				set_pairs.add(tuple(sorted([res1,res2])))
 	return set_pairs
 				
 if __name__ == "__main__":
