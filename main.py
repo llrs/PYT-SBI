@@ -10,13 +10,14 @@ import argparse
 import contact_map as cm
 
 
+## compare the maps using CA and minimum distance to search for something.
+
+
 if __name__ == '__main__':
-    msg = 'Predicts correlation between mutation and sturcture'
+    msg = 'Predicts correlation between mutation and structure'
     argparser = argparse.ArgumentParser(description=msg)
     argparser.add_argument("file", help="PDB structure to analyze.")
-    argparser.add_argument("-a", 
+    argparser.add_argument("-a",
                            help="Atom to calculate distance with.",
-                           default="CA", choices=["CA", "CB"])
+                           default=None, choices=["CA", "CB"])
     args = argparser.parse_args()
-
-    cm.main(args.file, args.atom)
