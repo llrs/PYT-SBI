@@ -17,16 +17,29 @@ from Bio.PDB import PDBList
 
 
 env = modeller.environ()
-# Read a fasta alingment and prepare for a model
-# file_ali = "file_alignment.fasta"
-# aln = modeller.alignment(env)
-# aln.append(file=file_ali, alignment_format="FASTA", remove_gaps=False)
-# aln.write(file='output.pir', alignment_format='PIR')
+
+
+def convert_ali(fasta, pir):
+    """An alignment in fasta format is converted to Modeller/pir format."""
+    file_ali = "file_alignment.fasta"
+    aln = modeller.alignment(env)
+    aln.append(file=file_ali, alignment_format="FASTA", remove_gaps=False)
+    aln.write(file=pir, alignment_format='PIR')
 # aln.check()  # Not sure if needed see the link:
 # https://salilab.org/modeller/9v2/manual/node269.html
-# Download the pdb file
-# pdbl = PDBList()
-# file = pdbl.retrieve_pdb_file('1FAT', pdir="path to the download folder")
+
+
+def pdb_download(code, path=None):
+    """Downloads the structure of the pdb on a file.
+
+    Returns the file name where it is stored"""
+    pdbl = PDBList()
+    if path is None:
+        file = pdbl.retrieve_pdb_file('1FAT')
+    else:
+        file = pdbl.retrieve_pdb_file('1FAT', pdir=path)
+    return file
+
 # Read it and create a model
 # a = modeller.automodel.automodel(env, alnfile='output.pir',
 #         knowns='1bdmA', sequence='TvLDH',
@@ -40,17 +53,31 @@ env = modeller.environ()
 
 
 # Asses energy profile
-def asses_energy(pdb_file):
-    """"""
+def asses_energy(pdb_file, name=None):
+    """Asses energy of a pdb.
+
+    Returns a matrix of energy for a plot.
+    pdb_file is the name of the file to analyze
+    name is the name of the output file with the energy profile"""
     env.libs.topology.read(file='$(LIB)/top_heav.lib')  # read topology
     env.libs.parameters.read(file='$(LIB)/par.lib')  # read parameters
 
-    mdl = modeller.scripts.complete_pdb(env, 'pdb1cd8.ent',
+    mdl = modeller.scripts.complete_pdb(env, pdb_file,
                         model_segment=('FIRST:A', 'LAST:Z'))  # Model of pdb
     s = modeller.selection(mdl)
-    a = s.assess_dope(output='ENERGY_PROFILE NO_REPORT', file='1cd8.profile',
-              normalize_profile=True, smoothing_window=15)
+    if name is not None:
+        a = s.assess_dope(output='ENERGY_PROFILE NO_REPORT',
+                    file='{}.profile'.format(name),
+                      normalize_profile=True, smoothing_window=15)
+    else:
+        a = s.assess_dope(output='ENERGY_PROFILE NO_REPORT',
+                      normalize_profile=True, smoothing_window=15)
     return a
-# Plot energies of the model
-# plt.figure(energies)
-# plt.show()
+
+
+def plot_energy(energy):
+    """Creates a plot of the energies of the pdb structure.
+
+    Several energies can be provided and will be superposed on the plot."""
+    # Plot energies of the model
+    plt.figure(energy)
