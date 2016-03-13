@@ -3,42 +3,37 @@
 
 '''
 Created on Mar 7, 2016
-
+Provides functions to create a contact map given a pdb structure.
 @author: Lluís, Leo, Ferran
-From: http://www2.warwick.ac.uk/fac/sci/moac/people/students/peter_cock/
-     python/protein_contact_map/
+Adapted from: http://www2.warwick.ac.uk/fac/sci/moac/people/students/peter_cock
+     /python/protein_contact_map/
 '''
-import numpy as np
 import argparse
 import logging
 import os
 
+import numpy as np
+from Bio import SeqIO
 from Bio.PDB.PDBParser import PDBParser
 import matplotlib.pyplot as plt
 
 
 def calc_residue_dist(residue_one, residue_two, atom):
     """Returns the distance between two residues between the selected atom."""
-    logging.debug("Calculating distance between {} and {} at {} atom.".format(
-                 residue_one.id, residue_two.id, atom))
-    if atom is None:
-        distance = []
-        for a in ("CA", "CB"):
-            try:
-                distance.append(residue_one[a] - residue_two[a])
-            except KeyError:
-                continue
-        else:
-            distance = min(distance)
-    else:
-        distance = residue_one[atom] - residue_two[atom]
+    msg = "Calculating distance between {}{} and {}{} at {} atom."
+    logging.debug(msg.format(residue_one.get_resname(), residue_one.id[1],
+                             residue_two.get_resname(), residue_two.id[1],
+                             atom))
+    assert atom is not None
+    distance = residue_one[atom] - residue_two[atom]
     return distance
 
 
 def calc_min_dist(residue_one, residue_two):
     """Returns the minimum distance between two residues."""
-    logging.debug("Calculating minimum distance between {} and {}.".format(
-                 residue_one.id, residue_two.id))
+    logging.debug("Calculating minimum distance between {}{} and {}{}.".format(
+                   residue_one.get_resname(), residue_one.id[1],
+                   residue_two.get_resname(), residue_two.id[1]))
     distances = []
     for a1 in residue_one:
         for a2 in residue_two:
@@ -47,26 +42,14 @@ def calc_min_dist(residue_one, residue_two):
     return min(distances)
 
 
-# def comp_dist(residue_one, residue_two):
-#     """Compares if there is any difference distances"""
-#     logging.debug("comparingdistance between {} and {}.".format(
-#                  residue_one.id, residue_two.id))
-#     CA_dist = calc_residue_dist(residue_one, residue_two, "CA")
-#     min_dist = calc_min_dist(residue_one, residue_two)
-#     if CA_dist > 12 and min_dist < 6:
-#         return 1
-#     else:
-#         return 0
-
-
-def calc_dist_matrix(chain, atom):
+def calc_dist_matrix(chain, atom=None):
     """Returns a matrix of distances between residues of the same chain."""
     logging.debug("Calculating distance matrix for {}".format(chain))
     size = len(chain)
     answer = np.zeros((size, size), np.float)
     for row, residue_one in enumerate(chain):
         for col, residue_two in enumerate(chain):
-            if atom == min or atom is None:
+            if atom == "min" or atom is None:
                 answer[row, col] = calc_min_dist(residue_one, residue_two)
             else:
                 answer[row, col] = calc_residue_dist(residue_one, residue_two,
@@ -81,7 +64,7 @@ def filter_residues(structure):
     logging.debug("Reading residues of structure {}".format(structure))
     residues = tuple(structure.get_residues())
     # Filter those who are not an aminoacid
-
+    logging.debug("The structure has {} residues.".format(len(residues)))
     logging.info("Filtering non-standard residues")
     residues = tuple(filter(lambda x: x.id[0] == " ", residues))
     logging.debug("Remaining {} residues.".format(len(residues)))
@@ -92,7 +75,7 @@ def contact_map(distance_map, atom):
     """Given a distance map select which residues have a relevant contact."""
     logging.debug("Selecting the contacts between atoms based on {}.".format(
                                                                     atom))
-    sizes = {"CA": 15, "CB": 12, None: 6}
+    sizes = {"CA": 15, "CB": 12, "min": 6}
     size = len(distance_map)
     answer = np.zeros((size, size), dtype=bool)
     contact = 0
@@ -118,8 +101,6 @@ def plot_distance(distances, name_file, option):
     plt.title('Distances of the file {}'.format(name_file))
     legend = plt.colorbar(heatmap)
     legend.set_label("Angstroms")
-    if option is None:
-        option = "min"
     plt.savefig('distance_map_{}_{}.png'.format(name_file, args.a, option),
                 format="png")
 
@@ -127,17 +108,11 @@ def plot_distance(distances, name_file, option):
 def plot_contacts(contacts, name_file, option):
     """Plots the contact map between residues"""
     logging.info("Plotting the contact map for {}".format(name_file))
-#     plt.imshow(contacts, interpolation='none')
-#     plt.imshow(contacts, aspect="auto", cmap=plt.cm.gray,
-#                          interpolation="nearest")
-#     plt.title("Contacts between the residues of {}".format(name_file))
     fig = plt.figure()
     ax = fig.add_subplot(111)
     fig.suptitle("Contact between residues of {}".format(name_file))
     ax.imshow(contacts, aspect='auto',
               cmap=plt.cm.gray, interpolation='nearest')
-    if option is None:
-        option = "min"
     plt.savefig("contact_map_{}_{}.png".format(name_f, args.a, option),
                 format="png")
 
@@ -155,7 +130,7 @@ if __name__ == "__main__":
                            help="""Atom to calculate distance with
                            CA: Carbon Alpha, CB: Carbon Beta. By default is
                             the minimum distance between residues""",
-                           default=None, choices=["CA", "CB"])
+                           default="min", choices=["CA", "CB"])
 
     args = argparser.parse_args()
     base = os.path.basename(args.file)
@@ -170,3 +145,4 @@ if __name__ == "__main__":
     cont_matrix = contact_map(dist_matrix, args.a)
     plot_contacts(cont_matrix, name_f, args.a)
     logging.captureWarnings(False)
+
