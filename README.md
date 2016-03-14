@@ -1,5 +1,5 @@
-# BrokerMaster
-Repository for all the applications related to the project for DBW of the master UPF
+# PYT-SBI Project
+Correlated mutations and distance correlations to predict Aa interactions
 
 # Git help
 Normal workflow if it don't have any error:
@@ -10,3 +10,10 @@ Normal workflow if it don't have any error:
 	git push # Share the changes with everybody in Github
 
 Any error, ask Internet!
+
+# TODO list
+	[] Tutorial
+	[] Analysis
+	[] Modeller
+	[] Working
+
