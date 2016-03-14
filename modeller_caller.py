@@ -10,6 +10,9 @@ Created on Mar 12, 2016
 
 import argparse
 import logging
+import os
+
+from Bio import AlignIO
 
 import matplotlib.pyplot as plt
 import modeller.scripts
@@ -39,12 +42,42 @@ class modeller_caller(object):
 
     def convert_ali(self, fasta, pir):
         """An alignment in fasta format is converted to Modeller/pir format."""
-        file_ali = "file_alignment.fasta"
+        assert pir != "output.pir"  # Assumption
+        logging.captureWarnings(True)
         aln = modeller.alignment(self.env)
-        aln.append(file=file_ali, alignment_format="FASTA", remove_gaps=False)
-        aln.write(file=pir, alignment_format='PIR')
-        # aln.check()  # Not sure if needed see the link:
-        # https://salilab.org/modeller/9v2/manual/node269.html
+        aln.append(file=fasta, alignment_format="FASTA", remove_gaps=False)
+        aln.write(file="output.pir", alignment_format='PIR')
+
+        alignment = AlignIO.read(fasta, "fasta")
+        values = []
+        for record in alignment:
+            values.append([len(record), record.id])
+#             pdb_download(record.id)  # Download the pdb to build the model later
+
+        self.pir = pir  # Set the pir as an attribute
+        # Conver the pir into a understandable pir format?
+        with open(pir, "w") as out:
+            with open("output.pir", "r") as fl:
+                records = fl.read()
+                records = records.split(">")
+                for n, record in enumerate(records, start=-1):
+                    lines = record.split("\n")
+                    if lines[0] == "":
+                        continue
+                    id_pdb = lines[0].split(";")[1]
+                    lines[0] = ">"+lines[0]
+                    fields = lines[1].split(":")
+                    fields[1] = id_pdb
+                    fields[2] = "1"
+                    if values[n][1] == id_pdb.rstrip():
+                        fields[3] = str(values[n][0])
+                    else:
+                        fields[3] = "500"  # Default length of the sequence
+                    lines[1] = ":".join(fields)
+                    lines_o = "\n".join(lines)
+                    out.write(lines_o)
+        os.remove("output.pir")
+        logging.captureWarnings(False)
 
     def asses_energy(self, pdb_file, name=None):
         """Asses energy of a pdb.
@@ -71,21 +104,25 @@ class modeller_caller(object):
 #                           normalize_profile=True, smoothing_window=15)
         logging.captureWarnings(False)
         return score
+    
+    def model(self, alig_pir, known, seq):
+        """Uses automodel to generate a model of the """
+        logging.captureWarnings(True)
+        a = modeller.automodel.automodel(self.env, alnfile=alig_pir,
+                knowns=known, sequence=seq,
+                assess_methods=modeller.automodel.assess.DOPE)
 
-    # Read it and create a model
-    # a = modeller.automodel.automodel(env, alnfile='output.pir',
-    #         knowns='1bdmA', sequence='TvLDH',
-    #         assess_methods=(modeller.automodel.assess.DOPE,
-    #         #soap_protein_od.Scorer(),
-    #         modeller.automodel.assess.GA341))
-    #
-    # a.starting_model = 1
-    # a.ending_model = 5
-    # a.make()
+        a.starting_model = 1
+        a.ending_model = 5
+        a.make()
+        self.outputs = a.outputs
+        logging.captureWarnings(False)
 
 modeler = modeller_caller(env)
-energies = modeler.asses_energy("pdb1cd8.ent", "profile_1cd8")
-print(energies)
+modeler.convert_ali("output.fastaa", "output_modeller.pir")
+# modeler.model("output_modeller.pir", "1cd8A", "1dc8A")
+# energies = modeler.asses_energy("pdb1cd8.ent", "profile_1cd8")
+# print(energies)
 
 
 def plot_energy(energy):
