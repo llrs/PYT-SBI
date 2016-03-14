@@ -75,11 +75,15 @@ def filter_residues(structure):
     return residues
 
 
-def contact_map(distance_map, atom):
+def contact_map(distance_map, atom, dist=None):
     """Given a distance map select which residues have a relevant contact."""
     logging.debug("Selecting the contacts between atoms based on {}.".format(
                                                                     atom))
-    sizes = {"CA": 15, "CB": 12, "min": 6}
+    if dist is None:
+        distances = {"CA": 15, "CB": 12, "min": 6}
+    else:
+        distances = dist
+
     size = len(distance_map)
     answer = np.zeros((size, size), dtype=bool)
     contact = 0
@@ -90,7 +94,7 @@ def contact_map(distance_map, atom):
             # of 4 residues the minimum distance is 3
             if abs(c-b) <= 2:
                 pass
-            elif distance_map[c][b] <= sizes[atom]:
+            elif distance_map[c][b] <= distances[atom]:
                 contact += 1
                 answer[c][b] = True
     logging.info("Found {} contacts between residues.".format(contact/2))
