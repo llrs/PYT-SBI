@@ -25,7 +25,11 @@ def calc_residue_dist(residue_one, residue_two, atom):
                              residue_two.get_resname(), residue_two.id[1],
                              atom))
     assert atom is not None
-    distance = residue_one[atom] - residue_two[atom]
+    try:
+        distance = residue_one[atom] - residue_two[atom]
+    except KeyError:
+        logging.info("Using C-Alpha distance for glycine.")
+        distance = residue_one["CA"] - residue_two["CA"]
     return distance
 
 
