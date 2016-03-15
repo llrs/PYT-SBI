@@ -109,7 +109,7 @@ def plot_distance(distances, name_file, option):
     plt.title('Distances of the file {}'.format(name_file))
     legend = plt.colorbar(heatmap)
     legend.set_label("Angstroms")
-    plt.savefig('distance_map_{}_{}.png'.format(name_file, args.a, option),
+    plt.savefig('distance_map_{}_{}.png'.format(name_file, option),
                 format="png")
 
 
@@ -121,7 +121,7 @@ def plot_contacts(contacts, name_file, option):
     fig.suptitle("Contact between residues of {}".format(name_file))
     ax.imshow(contacts, aspect='auto',
               cmap=plt.cm.gray, interpolation='nearest')
-    plt.savefig("contact_map_{}_{}.png".format(name_f, args.a, option),
+    plt.savefig("contact_map_{}_{}.png".format(name_file, option),
                 format="png")
 
 
@@ -153,4 +153,3 @@ if __name__ == "__main__":
     cont_matrix = contact_map(dist_matrix, args.a)
     plot_contacts(cont_matrix, name_f, args.a)
     logging.captureWarnings(False)
-

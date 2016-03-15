@@ -41,7 +41,10 @@ class modeller_caller(object):
         self.env = env
 
     def convert_ali(self, fasta, pir):
-        """An alignment in fasta format is converted to Modeller/pir format."""
+        """An alignment in fasta format is converted to Modeller/pir format.
+
+        It downloads the pdb of the alignment to fetch the necessary data for 
+        the pir format."""
         assert pir != "output.pir"  # Assumption
         logging.captureWarnings(True)
         aln = modeller.alignment(self.env)
@@ -52,7 +55,9 @@ class modeller_caller(object):
         values = []
         for record in alignment:
             values.append([len(record), record.id])
-#             pdb_download(record.id)  # Download the pdb to build the model later
+            pdb_download(record.id)  # Download the pdb to build the model
+        
+
 
         self.pir = pir  # Set the pir as an attribute
         # Conver the pir into a understandable pir format?
@@ -104,8 +109,8 @@ class modeller_caller(object):
 #                           normalize_profile=True, smoothing_window=15)
         logging.captureWarnings(False)
         return score
-    
-    def model(self, alig_pir, known, seq):
+
+    def modelize(self, alig_pir, known, seq):
         """Uses automodel to generate a model of the """
         logging.captureWarnings(True)
         a = modeller.automodel.automodel(self.env, alnfile=alig_pir,
@@ -119,8 +124,8 @@ class modeller_caller(object):
         logging.captureWarnings(False)
 
 modeler = modeller_caller(env)
-modeler.convert_ali("output.fastaa", "output_modeller.pir")
-# modeler.model("output_modeller.pir", "1cd8A", "1dc8A")
+# modeler.convert_ali("output.fastaa", "output_modeller.pir")
+modeler.modelize("output_modeller.pir", "1cd8A", "1dc8A")
 # energies = modeler.asses_energy("pdb1cd8.ent", "profile_1cd8")
 # print(energies)
 
