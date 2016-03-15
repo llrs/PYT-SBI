@@ -16,21 +16,31 @@ from Bio.Align.Applications import MuscleCommandline
 from Bio.Align.Applications import TCoffeeCommandline
 
 
-def call_msa_method(method, in_file, out_file, executable_path, output_format):
-    """Calls the appropriate MSA method"""
+def call_msa_method(method, in_file, out_file, output_format=None):
+    """Calls the appropriate program to generate a MSA.
+    the muscle is the only one that only produce FASTA alignments,
+    in the other programs this can be changed"""
     logging.info("Creating a MSA  with {} from {} to {}".format(
                                             method, in_file, out_file))
-    assert os.path.isfile(executable_path), "Executable missing"
+
+    if find_executable(method):
+        pass
+    else:
+        msg = "Program {} not found it is installed?"
+        raise UnboundLocalError(msg.format(method))
+
     if method == "clustalw":
-        cline = ClustalwCommandline(executable_path,
-                                    infile=in_file, output_format="fasta")
+        cline = ClustalwCommandline(method,
+                                infile=in_file, output=output_format,
+                                OUTFILE=out_file, type="PROTEIN")
     elif method == "muscle":
-        cline = MuscleCommandline(executable_path,
+        cline = MuscleCommandline(method,
                                   input=in_file,
                                   out=out_file)
     elif method == "t_coffee":
-        cline = TCoffeeCommandline(infile=in_file,
-                                   output="clustalw",
+        cline = TCoffeeCommandline("t_coffee",
+                                infile=in_file,
+                                   output=output_format,
                                    outfile=out_file)
 
     stdout, stderr = cline()
@@ -40,12 +50,14 @@ def call_msa_method(method, in_file, out_file, executable_path, output_format):
 if __name__ == '__main__':
     msg = 'Carries out a MSA'
     programs_MSA = ["clustalw", "muscle", "t_coffee"]
-    argparser = argparse.ArgumentParser(description=msg)
+    argparser = argparse.ArgumentParser(description=msg,
+						formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     argparser.add_argument("file",
                            help="File with sequences to be aligned.")
     argparser.add_argument("-m",
                            help="Method for MSA.",
                            default="clustalw", choices=programs_MSA)
-    argparser.add_argument("-o", help="Output file.")
+    argparser.add_argument("-o", help="Output file.", default="aligned.aln")
+    argparser.add_argument("-f", help="Output format.", default="fasta")
     args = argparser.parse_args()
-    call_msa_method(args.m, args.f, "aligned.aln", find_executable(args.m))
+    call_msa_method(args.m, args.file, args.o, args.f)
