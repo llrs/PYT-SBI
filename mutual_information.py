@@ -30,6 +30,17 @@ def prune(aln, listcol):
 		aln = aln[:,:listcol[i]-i] + aln[:,listcol[i]-i+1:]
 	return aln
 
+def prune_id_gaps(aln, identifier):
+	"""Prunes the gaps in aln record labeled with identifier"""
+	for i in range(len(aln)):
+		if aln[i].id == identifier:
+			row = i
+	listcol = []
+	for i in range(aln.get_alignment_length()):
+		if aln[row].seq[i] == '-':
+			listcol.append(i)
+	return prune(aln,listcol)
+
 def prune_first_gaps(aln):
 	""" 
 	It returns a MultipleSeqAlignment object where the columns of 
@@ -268,8 +279,8 @@ def reconstruct_position(pos, deleted_pos):
 			
 def retrieve_residue_positions(binary_matrix, gap_list, extreme_list):
 	"""
-	Retrieves the set of pairs of residues showing signals of 
-	correlated mutations from the binary level matrix
+	Retrieves the original coordinates of the set of pairs of residues 
+	corresponding to True spots in the binary matrix
 	"""
 	set_pairs = set()
 	(n1,n2) = binary_matrix.shape
@@ -290,10 +301,10 @@ if __name__ == "__main__":
             SeqRecord(Seq("MLTTCA-TTTG", generic_protein), id="Gamma"),
             SeqRecord(Seq("-LGTCATTG-G", generic_protein), id="Delta"),
          ])
-
-	edited = prune(alignment, [0,4,6,9])
+	
+	print(alignment)
+	edited = prune_id_gaps(alignment, "Delta")
 	print(edited)
-	print(reconstruct_position(6,[]))	
 	
 #	alignarray = np.array([list(rec) for rec in edited], np.character)
 #	print("Array shape %d by %d" %alignarray.shape)	
