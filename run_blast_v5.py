@@ -1,34 +1,62 @@
-#This module provides code to work with the WWW version of BLAST provided by the NCBI.
+#!/usr/bin/python3
+# encoding: utf-8
+"""This module provides a function to work with the online version of BLAST
+provided by the NCBI.
+@author: Leo, Lluís, Ferran"""
+
+import logging
+
 from Bio.Blast import NCBIWWW
 from Bio.Blast import NCBIXML
 from Bio import SeqIO
+from Bio.Seq import Seq
 
-def run_BLAST(query):
-	blast_record_out = open('blast_record.fa','w')
-	record = SeqIO.read(query, format="fasta")
-	result_handle=NCBIWWW.qblast('blastp','nr',record.format("fasta"), 
-								perc_ident=30, 
-								service='psi',  
-								hitlist_size=1000) 
-	blast_record = NCBIXML.read(result_handle)
-	
-	blast_record_out.write(">%s\n%s\n" %(record.id, record.seq))
-	genere_set=set()
-	i=0
-	for alignment in blast_record.alignments:
-  		for hsp in alignment.hsps:	
-  			percentage_identity = 100*float(hsp.identities)/float(len(record.seq))
-  			if percentage_identity > 30:
-  				if '[' in alignment.title:
-					specie=((alignment.title).split('[')[len((alignment.title).split('['))-1]).split(']')[0]
-					genere=(specie.split(' '))[0]
-					if not set([genere]).issubset(genere_set) and genere.find('Cloning')<0 and genere.find('synthetic')<0:
-						blast_record_out.write(">%d-%s_%.2f\n%s\n" %(i, genere, 
-																 percentage_identity, 
-																 hsp.sbjct))
-					genere_set.add(str(genere))
-					i+=1 
-									
+
+def run_BLAST(query, db, output, size, filt=True):
+    """Runs a psi-blast online.
+
+    query is the file with the sequence
+    db is the db to do the blast usually nr or pdb
+    output is the file where the results will be stored
+    size is the number of expected results.
+    filt is the option to filter by genere,
+    so only those sequence of different genere will be saved"""
+    logging.info("Starting a blast from {} on {}.".format(query, db))
+    record = SeqIO.read(query, format="fasta")
+    result_handle = NCBIWWW.qblast('blastp', db, record.format("fasta"),
+                                    service='psi',
+                                    hitlist_size=size)
+
+    blast_record = NCBIXML.read(result_handle)
+    sq = len(record.seq)
+
+    with open(output, 'w') as blast_record_out:
+        SeqIO.write(record, blast_record_out, "fasta")
+        genere_set = set()
+#         for rounds in blast_record_out.rounds:
+#             for alignment in rounds.alignments:
+#                 print(alignment.title)
+#                 for hsp in alignment.hsps:
+#                     print(hsp.score)
+        if filt:
+            for alignment in blast_record.alignments:
+                if "[" in alignment.title:
+                    spiece = alignment.title.split('[')[-1].rstrip("]")
+                    genere = spiece.split()[1]
+                    for hsp in alignment.hsps:
+                        percentage_identity = 100 * hsp.identities/sq
+                        if percentage_identity > 30:
+                            if genere not in genere_set:
+                                blast_record_out.write(">{} {%.2f}\n{}\n".format(alignment.title, 
+                                                                 percentage_identity, 
+                                                                 hsp.sbjct))
+                                genere_set.add(genere)
+        else:
+            for alignment in blast_record.alignments:
+                print(alignment.title)
+                for hsp in alignment.hsps:
+                    SeqIO.write(Seq(hsp.sbjct), blast_record_out, format="fasta")
+
 
 if __name__ == "__main__":
-	run_BLAST('1cd8.fasta')
+    run_BLAST('P01732.fasta', "pdb", "output_blast_2.out", 50, True)
