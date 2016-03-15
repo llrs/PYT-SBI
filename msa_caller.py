@@ -36,10 +36,10 @@ if __name__ == '__main__':
 	msg = 'Carries out a MSA'
 	argparser = argparse.ArgumentParser(description=msg)
 	argparser.add_argument("-f",
-						   help = "File with sequences to be aligned.")
+						   help="File with sequences to be aligned.")
 	argparser.add_argument("-m", 
-                           help = "Method for MSA.",
-                           default = "clustalw")
-	argparser.add_argument("-o", help = "Output file.")
+                           help="Method for MSA.",
+                           default="clustalw")
+	argparser.add_argument("-o", help="Output file.")
 	args = argparser.parse_args()
 	call_msa_method(args.m, args.f, "aligned.aln", find_executable(args.m))
