@@ -72,6 +72,7 @@ class modeller_caller(object):
                     id_pdb = lines[0].split(";")[1]
                     lines[0] = ">"+lines[0]
                     fields = lines[1].split(":")
+                    fields[0] = "structureX"
                     fields[1] = id_pdb
                     fields[2] = "1"
                     if values[n][1] == id_pdb.rstrip():
@@ -111,7 +112,13 @@ class modeller_caller(object):
         return score
 
     def modelize(self, alig_pir, known, seq):
-        """Uses automodel to generate a model of the """
+        """Uses automodel to generate a model of the protein.
+
+        alig_pir is the alignment in pir format of the proteins.
+        known are the pdb structures known which are similar to the sequence.
+        it can be a list of pdb id which should be on the same folder and
+        in the alignment file
+        seq is the sequence we want to create the structure"""
         logging.captureWarnings(True)
         a = modeller.automodel.automodel(self.env, alnfile=alig_pir,
                 knowns=known, sequence=seq,
