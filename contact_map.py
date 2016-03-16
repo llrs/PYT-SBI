@@ -67,7 +67,7 @@ def filter_residues(structure):
     """Filters non-standard amino acids of the structure."""
     logging.debug("Reading residues of structure {}".format(structure))
     residues = tuple(structure.get_residues())
-    # Filter those who are not an aminoacid
+    # Filter those who are not an amino acid
     logging.debug("The structure has {} residues.".format(len(residues)))
     logging.info("Filtering non-standard residues")
     residues = tuple(filter(lambda x: x.id[0] == " ", residues))
@@ -145,6 +145,7 @@ if __name__ == "__main__":
     name_f = os.path.splitext(base)[0]
     parser = PDBParser(PERMISSIVE=1)
     logging.captureWarnings(True)
+
     structure = parser.get_structure("test", args.file)
 
     residues = filter_residues(structure)

@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+# encoding: utf-8
 """
 Provides a means to call 3 different MSA methods
 Created on Mar 13, 2016
@@ -40,8 +41,8 @@ def call_msa_method(method, in_file, out_file, output_format=None):
     elif method == "t_coffee":
         cline = TCoffeeCommandline("t_coffee",
                                 infile=in_file,
-                                   output=output_format,
-                                   outfile=out_file)
+                                output=output_format,
+                                outfile=out_file)
 
     stdout, stderr = cline()
     logging.debug(stderr)
