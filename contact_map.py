@@ -132,12 +132,12 @@ if __name__ == "__main__":
      - %(message)s"""
     formatter = logging.Formatter(fmt)
     msg = 'A module that calculates distance map'
-    argparser = argparse.ArgumentParser(description=msg)
+    argparser = argparse.ArgumentParser(description=msg,
+                    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     argparser.add_argument("file", help="PDB structure to analyze.")
     argparser.add_argument("-a",
                            help="""Atom to calculate distance with
-                           CA: Carbon Alpha, CB: Carbon Beta. By default is
-                            the minimum distance between residues""",
+                           CA: Carbon Alpha, CB: Carbon Beta.""",
                            default="min", choices=["CA", "CB"])
 
     args = argparser.parse_args()
