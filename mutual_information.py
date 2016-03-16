@@ -36,9 +36,9 @@ def prune_id_gaps(aln, identifier):
 		if aln[i].id == identifier:
 			row = i
 	listcol = []
-	for i in range(aln.get_alignment_length()):
-		if aln[row].seq[i] == '-':
-			listcol.append(i)
+	for j in range(aln.get_alignment_length()):
+		if aln[row].seq[j] == '-':
+			listcol.append(j)
 	return prune(aln,listcol)
 
 def prune_first_gaps(aln):
@@ -243,10 +243,10 @@ def mutual_info_c(aln):
 def plot_matrix_heatmap(matrix, keyword):
 	"""Plots a matrix of values as a heatmap"""
 	
-	plt.imshow(matrix, interpolation='none')
-	heatmap = plt.pcolor(matrix,cmap=plt.cm.binary)
+	imgplot = plt.imshow(matrix, cmap='Blues', interpolation='none')
+	#heatmap = plt.pcolormesh(matrix,cmap='Blues')
 	plt.title('{} heatmap'.format(keyword))
-	legend = plt.colorbar(heatmap)
+	legend = plt.colorbar(imgplot)
 	legend.set_label("{}".format(keyword))
 	plt.savefig('{}_heatmap.png'.format(keyword), format="png")
 	fig = plt.figure()
@@ -255,9 +255,8 @@ def plot_matrix_heatmap(matrix, keyword):
 def plot_matrix_binary(matrix, keyword):
 	"""Plots a matrix with binary values"""
 	
-	plt.imshow(matrix, interpolation='none')
-	heatmap = plt.pcolor(matrix,cmap=plt.cm.binary)
-	plt.title('{} heatmap'.format(keyword))
+	imgplot=plt.imshow(matrix, cmap = 'Greys', interpolation='none')
+	plt.title('{}'.format(keyword))
 	plt.savefig('{}_heatmap.png'.format(keyword), format="png")
 	fig = plt.figure()
 	fig.show()
@@ -280,31 +279,53 @@ def reconstruct_position(pos, deleted_pos):
 def retrieve_residue_positions(binary_matrix, gap_list, extreme_list):
 	"""
 	Retrieves the original coordinates of the set of pairs of residues 
-	corresponding to True spots in the binary matrix
+	corresponding to True spots in the binary matrix; only those above
+	the diagonal suffice
 	"""
 	set_pairs = set()
 	(n1,n2) = binary_matrix.shape
 	for i in range(n1):
 		for j in range(n2):
-			if binary_matrix[i,j] == 1:
+			if j > i and binary_matrix[i,j] == 1:
 				res1 = reconstruct_position(reconstruct_position(i,extreme_list),gap_list)
 				res2 = reconstruct_position(reconstruct_position(j,extreme_list),gap_list)
 				set_pairs.add(tuple(sorted([res1,res2])))
 	return set_pairs
+
+def retrieve_all_positions(matrix, gap_list, extreme_list):
+	"""
+	Retrieves a dictionary with keys given by the original coordinates 
+	of the set of pairs of residues corresponding to all spots in matrix 
+	above the diagonal, and values corresponding to the values in matrix.
+	"""
+	dict_pairs = {}
+	(n1,n2) = matrix.shape
+	for i in range(n1):
+		for j in range(n2):
+			if j > i:
+				res1 = reconstruct_position(reconstruct_position(i,extreme_list),gap_list)
+				res2 = reconstruct_position(reconstruct_position(j,extreme_list),gap_list)
+				value = matrix[i,j]
+				dict_pairs[tuple(sorted([res1,res2]))] = value
+	return dict_pairs
 				
 if __name__ == "__main__":
 #	alignment = AlignIO.read("./data/alignlist.aln", "clustal")
 	
 	alignment = MultipleSeqAlignment([
-            SeqRecord(Seq("MATTGCTATTT", generic_protein), id="Alpha"),
-            SeqRecord(Seq("MAGT-CTATGT", generic_protein), id="Beta"),
-            SeqRecord(Seq("MLTTCA-TTTG", generic_protein), id="Gamma"),
-            SeqRecord(Seq("-LGTCATTG-G", generic_protein), id="Delta"),
+            SeqRecord(Seq("TATT", generic_protein), id="Alpha"),
+            SeqRecord(Seq("ATGT", generic_protein), id="Beta"),
+            SeqRecord(Seq("-TTG", generic_protein), id="Gamma"),
+            SeqRecord(Seq("-LTG", generic_protein), id="Delta"),
          ])
 	
 	print(alignment)
 	edited = prune_id_gaps(alignment, "Delta")
 	print(edited)
+	mymatrix = mutual_info_c(edited)[1]
+	print(mymatrix)
+	mydict = retrieve_all_positions(mymatrix, [1,2], [1,2])
+	print(mydict)
 	
 #	alignarray = np.array([list(rec) for rec in edited], np.character)
 #	print("Array shape %d by %d" %alignarray.shape)	
