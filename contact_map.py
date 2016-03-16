@@ -138,7 +138,7 @@ if __name__ == "__main__":
     argparser.add_argument("-a",
                            help="""Atom to calculate distance with
                            CA: Carbon Alpha, CB: Carbon Beta.""",
-                           default="min", choices=["CA", "CB"])
+                           default="min", choices=["CA", "CB", "min"])
 
     args = argparser.parse_args()
     base = os.path.basename(args.file)
