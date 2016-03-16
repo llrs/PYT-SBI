@@ -20,6 +20,7 @@ import matplotlib.pyplot as plt
 import modeller.scripts
 import modeller.automodel
 from Bio.PDB import PDBList
+from Bio.PDB.PDBParser import PDBParser
 
 env = modeller.environ()  # Some variables needed for the modeller
 
@@ -29,11 +30,13 @@ def pdb_download(code, path=None):
 
     Returns the file name where it is stored"""
     logging.info("Downloading pdb %s.", code)
+    logging.captureWarnings(True)
     pdbl = PDBList(obsolete_pdb=os.getcwd())
     if path is None:
         file = pdbl.retrieve_pdb_file(code)
     else:
         file = pdbl.retrieve_pdb_file(code, pdir=path)
+    logging.captureWarnings(False)
     return file
 
 
@@ -46,7 +49,7 @@ class modeller_caller(object):
 
     def _extract_id(self, header):
         """Returns the id of the sequence."""
-        return header.split("|")[-2]
+        return header.split("|")[-2].lower()
 
     def convert_ali(self, fasta, pir):
         """An alignment in fasta format is converted to Modeller/pir format.
@@ -62,17 +65,21 @@ class modeller_caller(object):
         sequences = SeqIO.parse(fasta_h, "fasta")
         values = []
         for record in sequences:
-            values.append([len(record), self._extract_id(record.id)])
+            pdb_id = self._extract_id(record.id)
+            values.append([len(record), pdb_id])
 #             print(record.id)
             # Download the pdb to build the model
             # modeller search for all the posible names of the file
             try:
-                pdb_download(self._extract_id(record.id), os.getcwd())
+                pdb = pdb_download(pdb_id, os.getcwd())
             except urllib.error.URLError:
                 pass
             except ftplib.error_perm:
                 pass
-
+#             finally:
+#                 parser = PDBParser(PERMISSIVE=1)
+#                 structure = parser.get_structure(pdb_id, pdb)
+#                 print(parser.get_trailer())
         self.pir = pir  # Set the pir as an attribute
         # Convert the pir into a understandable pir format?
         with open(pir, "w") as out:
@@ -89,6 +96,7 @@ class modeller_caller(object):
                     fields[0] = "structureX"
                     fields[1] = id_pdb
                     fields[2] = "1"
+                    fields[3] = "A"
                     if values[n][1] == id_pdb.rstrip():
                         fields[4] = str(values[n][0])
                     else:
