@@ -19,8 +19,11 @@ from Bio.PDB.PDBParser import PDBParser
 from Bio.SeqUtils import seq1
 from Bio.Blast.Applications import NcbiblastpCommandline
 
+import contact_map as cm
+
 Entrez.email = "ferran.muinos@gmail.com"
 Entrez.tool = "cozmic.py"
+
 
 
 def run_BLAST(query, blast_type, db, size):
@@ -54,7 +57,6 @@ def analyze_blast_result(blast_out, filt=True):
     id_set = []
     genere_set = set()
     for alignment in blast_out.alignments:
-        print("why isn't it working?")
         logging.debug("Analyzing alignment: %s", alignment.title)
         if filt:
             if "[" in alignment.title:
@@ -153,11 +155,9 @@ if __name__ == "__main__":
 
     args = argparser.parse_args()
 
-#     blast_result = run_BLAST(args.input, args.type, args.db, args.s)
-    blast_result = local_blast(args.input, args.type, args.db)
-    print("bye")
+    blast_result = run_BLAST(args.input, args.type, args.db, args.s)
+#     blast_result = local_blast(args.input, args.type, args.db)
     ides = analyze_blast_result(blast_result, args.f)
-    print(ides)
     ids = list(filter_ids(ides, "gi"))
     ides_pdb = list(filter_ids(ides, "pdb"))
     file_out = open(args.output_file, "w")

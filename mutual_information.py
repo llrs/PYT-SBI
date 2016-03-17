@@ -9,11 +9,12 @@ Created on Mar 7, 2016
 """
 # standard modules
 import argparse
-import matplotlib.pyplot as plt
 import numpy as np
 import copy
 import math
+import logging
 
+import matplotlib.pyplot as plt
 
 # Biopython modules
 from Bio import AlignIO
@@ -25,6 +26,7 @@ import plots
 def prune(aln, listcol):
     """It prunes the colunms enclosed in listcol from the
     input MultipleSeqAlignment object aln."""
+    logging.debug("Pruning alignment.")
     listcol = sorted(listcol)
     for i in range(len(listcol)):
         aln = aln[:, : listcol[i]-i] + aln[:, listcol[i]-i+1:]
@@ -33,6 +35,7 @@ def prune(aln, listcol):
 
 def prune_id_gaps(aln, identifier):
     """Prunes the gaps in aln record labeled with identifier"""
+    logging.debug("Pruning id gaps")
     for i in range(len(aln)):
         if aln[i].id == identifier:
             row = i
@@ -262,7 +265,7 @@ def plot_matrix_heatmap(matrix, keyword):
 
 
 def plot_matrix_binary(matrix, keyword):
-    """Plots a matrix with binary values"""
+    """Plots a matrix with binary values."""
 
     imgplot = plt.imshow(matrix, cmap = 'Greys', interpolation='none')
     plt.title('{}'.format(keyword))
@@ -365,7 +368,8 @@ if __name__ == "__main__":
     if args.g:
         gapped_list = get_all_gaps(edited)
     edited = prune(edited, gapped_list)
-    (minlist, maxlist) = get_extreme_columns(edited, args.low, args.high, args.b)
+    (minlist, maxlist) = get_extreme_columns(edited, args.low, args.high,
+											args.b)
     edited = prune(edited, minlist+maxlist)
     # compute MI, NCPS, MIc, Z-score MIc + its associated level matrix
     MI_matrix = mutual_info_matrix(edited, args.b)
@@ -373,12 +377,12 @@ if __name__ == "__main__":
     MIc_matrix = MI_matrix - ncps_array
     zMIc_matrix = standardise_matrix(MIc_matrix)
     # plot MIc Z-scores and its associated level matrix
-    plots.plot_matrix_heatmap(zMIc_matrix,"zMIc")
-    tmatrix = get_level_matrix(zMIc_matrix,args.L)
-    plots.plot_matrix_binary(tmatrix,"zMIc>{}".format(args.L))
+    plots.plot_matrix_heatmap(zMIc_matrix, "zMIc")
+    tmatrix = get_level_matrix(zMIc_matrix, args.L)
+    plots.plot_matrix_binary(tmatrix, "zMIc>{}".format(args.L))
     # Retrieve CM residue pairs in their original coordinates
-    cm_residue_pairs = retrieve_residue_positions(tmatrix,gapped_list,minlist+maxlist)
+    cm_residue_pairs = retrieve_residue_positions(tmatrix, gapped_list,minlist+maxlist)
     fd = open(args.o, "w")
     for residue_pair in sorted(cm_residue_pairs):
-        fd.write("%d %d\n" %residue_pair)
+        fd.write("%d %d\n" % residue_pair)
     fd.close()

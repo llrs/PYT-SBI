@@ -17,16 +17,14 @@ import sys
 
 from Bio import SeqIO
 
-import matplotlib.pyplot as plt
 import modeller.scripts
 import modeller.automodel
 from Bio.PDB import PDBList
-from Bio.PDB.PDBParser import PDBParser
 
 
 # Code from https://salilab.org/archives/modeller_usage/2015/msg00043.html
 class ShutUp(object):
-    """Redirects the output of the stdout"""
+    """Redirects the output of the stdout."""
     def __enter__(self):
         self._stdout = sys.stdout
         sys.stdout = open(os.devnull, 'w')
@@ -37,7 +35,7 @@ class ShutUp(object):
 
 
 class env_mod(modeller.environ):
-    """Modified version to redirect the output and open it silently"""
+    """Modified version to redirect the output and open it silently."""
     def __init__(self):
         """Modify"""
         with ShutUp():
@@ -177,19 +175,8 @@ class modeller_caller(object):
         a.ending_model = 5
         a.make()
         self.outputs = a.outputs
-        print(self.outputs)
         logging.captureWarnings(False)
         return self.outputs
-
-
-def plot_energy(energy):
-    """Creates a plot of the energies of the pdb structure.
-
-    Several energies can be provided and will be superposed on the plot."""
-#     print("doing something with energies")
-    # Plot energies of the model
-    plt.plot(energy, linewidth=2)
-    plt.show()
 
 if __name__ == "__main__":
     msg = 'Creates models of the sequences'
@@ -202,8 +189,6 @@ if __name__ == "__main__":
     argparser.add_argument("-fasta",
                            help="File with sequences in fasta format")
     args = argparser.parse_args()
-#     print(os.getcwd())
-#     pdb_download("3kud", os.getcwd())
     env = modeller.environ()  # Some variables needed for the modeller
     modeler = modeller_caller(env)
 
@@ -212,6 +197,5 @@ if __name__ == "__main__":
         raise argparser.error("Required a fasta or a pir alignment")
     elif args.fasta:
         modeler.convert_ali(args.fasta, args.pir)
-    # modeler.convert_ali("output.fastaa", "output_modeller.pir")
-    else:
-        modeler.modelize(args.pir, args.seq, args.models)
+
+    modeler.modelize(args.pir, args.seq, args.models)

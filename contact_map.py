@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 
 def calc_residue_dist(residue_one, residue_two, atom):
     """Returns the distance between two residues between the selected atom."""
-    msg = "Calculating distance between {}{} and {}{} at {} atom."
+    msg = "Calculating distance between {} {} and {} {} at {} atom."
     logging.debug(msg.format(residue_one.get_resname(), residue_one.id[1],
                              residue_two.get_resname(), residue_two.id[1],
                              atom))
@@ -35,7 +35,7 @@ def calc_residue_dist(residue_one, residue_two, atom):
 
 def calc_min_dist(residue_one, residue_two):
     """Returns the minimum distance between two residues."""
-    logging.debug("Calculating minimum distance between {}{} and {}{}.".format(
+    logging.debug("Calculating minimum distance between {} {} and {} {}.".format(
                    residue_one.get_resname(), residue_one.id[1],
                    residue_two.get_resname(), residue_two.id[1]))
     distances = []
@@ -139,8 +139,23 @@ if __name__ == "__main__":
                            help="""Atom to calculate distance with
                            CA: Carbon Alpha, CB: Carbon Beta.""",
                            default="min", choices=["CA", "CB", "min"])
-
+    {"CA": 15, "CB": 12, "min": 6}
+    argparser.add_argument("-CA",
+                           help="""Set the threshold distance for Carbon alpha
+                           """,
+                           type=int,
+                           defaul=15)
+    argparser.add_argument("-CB",
+                           help="""Set the threshold distance for Carbon beta
+                           """,
+                           type=int,
+                           defaul=12)
+    argparser.add_argument("-min",
+                           help="""Set the minimal threshold distance""",
+                           type=int,
+                           defaul=16)
     args = argparser.parse_args()
+    dist = {"CA": args.CA, "CB": args.CB, "min": args.min}
     base = os.path.basename(args.file)
     name_f = os.path.splitext(base)[0]
     parser = PDBParser(PERMISSIVE=1)
@@ -152,5 +167,5 @@ if __name__ == "__main__":
     dist_matrix = calc_dist_matrix(residues, args.a)
     plot_distance(dist_matrix, name_f, args.a)
     cont_matrix = contact_map(dist_matrix, args.a)
-    plot_contacts(cont_matrix, name_f, args.a)
+    plot_contacts(cont_matrix, name_f, args.a, dist)
     logging.captureWarnings(False)

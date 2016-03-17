@@ -31,6 +31,7 @@ from Bio.Data import SCOPData
 # Non-standard modules
 import contact_map as cm
 import mutual_information as mut
+import modeller_caller as mc
 import msa_caller as msa
 import run_blast_v5 as blst
 import plots
@@ -69,7 +70,8 @@ def analyze_pdb(pdb_file, atom, blast, db, s, f, m, low, high, b):
 
     # Call run_BLAST and write the output in the output file
     # So far it is not working
-    ides = blst.run_BLAST(blast_query_name, blast, db, s, f)
+    blast_out = blst.run_BLAST(blast_query_name, blast, db, s)
+    ides = blst.analyze_blast_result(blast_out, f)
     ids = list(blst.filter_ids(ides, "gi"))
     SeqIO.write(blst.retrive_sequence(ids), file_out, "fasta")
     file_out.close()
@@ -187,7 +189,11 @@ if __name__ == '__main__':
                            default=1)
     args = argparser.parse_args()
 
-    logging.basicConfig(filename='cozmic.log', level=100/(args.d*10))
+    # Logger formatting
+    logging.basicConfig(filename='cozmic.log', level=int(100/(args.d*10)))
+    fmt = """%(asctime)s - %(filename)s - %(funcName)s - %(levelname)s
+     - %(message)s"""
+    formatter = logging.Formatter(fmt)
 
     if args.workflow == "real":
 
@@ -196,20 +202,13 @@ if __name__ == '__main__':
         if os.path.isfile(args.i):
             pdbpath = args.i
         else:
-            pdbl = PDBList()
-            try:
-                pdbpath = pdbl.retrieve_pdb_file(args.i)
-            except urllib.error.URLError:
-                pass
-            except ftplib.error_perm:
-                pass
-            else:
-                dw_msg = "Make sure your to download {} format is correct."
-                raise IOError(dw_msg.format(args.i))
-
+            pdbpath = mc.pdb_download(args.i, path=os.getcwd())
+        logging.captureWarnings(True)
         analyze_pdb(pdbpath, args.a, args.blast, args.db, args.s,
                     args.f, args.m, args.low, args.high, args.b)
+        logging.captureWarnings(False)
         # Leo's function here!
     elif args.workflow == "model":
         pass
         # once, generated the model analyse with the function
+        mc
