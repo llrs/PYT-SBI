@@ -7,6 +7,7 @@ Created on Mar 7, 2016
 @author: Leo, Lluís, Ferran
 """
 # standard modules
+import argparse
 import matplotlib.pyplot as plt
 import numpy as np
 import copy
@@ -19,6 +20,9 @@ from Bio.Align import MultipleSeqAlignment
 from Bio.Alphabet import generic_dna, generic_protein
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
+
+# Non-standard modules
+import plots
 
 def prune(aln, listcol):
 	""" 
@@ -173,6 +177,16 @@ def mutual_info_matrix(aln, base=20):
 				matrix[i,j] = copy.copy(matrix[j,i])
 	return matrix
 
+def matrix_hits(binary_matrix):
+	"""Number of True cells above the diagonal in a binary matrix"""
+	count = 0
+	(n1,n2) = binary_matrix.shape
+	for i in range(n1):
+		for j in range(n2):
+			if j > i:
+				count += binary_matrix[i,j]
+	return count
+
 def standardise_matrix(mat):
 	"""
 	It resturns a matrix with Z-score values of mat, using the mean and 
@@ -310,23 +324,65 @@ def retrieve_all_positions(matrix, gap_list, extreme_list):
 	return dict_pairs
 				
 if __name__ == "__main__":
-#	alignment = AlignIO.read("./data/alignlist.aln", "clustal")
-	
-	alignment = MultipleSeqAlignment([
-            SeqRecord(Seq("TATT", generic_protein), id="Alpha"),
-            SeqRecord(Seq("ATGT", generic_protein), id="Beta"),
-            SeqRecord(Seq("-TTG", generic_protein), id="Gamma"),
-            SeqRecord(Seq("-LTG", generic_protein), id="Delta"),
-         ])
-	
-	print(alignment)
-	edited = prune_id_gaps(alignment, "Delta")
-	print(edited)
-	mymatrix = mutual_info_c(edited)[1]
-	print(mymatrix)
-	mydict = retrieve_all_positions(mymatrix, [1,2], [1,2])
-	print(mydict)
-	
-#	alignarray = np.array([list(rec) for rec in edited], np.character)
-#	print("Array shape %d by %d" %alignarray.shape)	
-
+	msg='Runs the computations related to zMIc'
+	argparser = argparse.ArgumentParser(description=msg,
+	            formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+	# compulsory input
+	argparser.add_argument("i", help="MSA file")
+	argparser.add_argument("id", help="Target identifier")
+	# optional input
+	argparser.add_argument("-o",
+						   help="""Output file to keep the CM residue
+						   pair candidates.""",
+						   default="CM_residue_pairs.out")
+	argparser.add_argument("-L",
+						   help="""Threshold level to select candidates.""",
+						   type=float,
+						   default=2.0)
+	argparser.add_argument("-b",
+						   help="""Base of the logarithms used throughout
+						   entropy and mutual information computations.""",
+						   type=int,
+                           default=20)
+	argparser.add_argument("-g", help="""If present, then prune those 
+                           columns of the MSA which have at least one gap.""",
+                           action='store_true', 
+                           default=False)
+	argparser.add_argument("-low",
+                           help="""Threshold of mininum entropy allowed
+                           for each column in a MSA. Columns below this
+                           threshold are pruned.""",
+                           type=float,
+                           default=0.3)
+	argparser.add_argument("-high",
+                           help="""Threshold of maximum entropy allowed 
+                           for each column in a MSA. Columns above this
+                           threshold are pruned.""",
+                           type=float,
+                           default=0.9)
+	args = argparser.parse_args()
+	# Read MSA
+	alignment = AlignIO.read(args.i, "clustal")
+	# Prepare the alignment for MIc computations: prune high and low entropy columns
+	edited = prune_id_gaps(alignment, args.id)
+	gapped_list = []
+	if args.g:
+		gapped_list = get_all_gaps(edited)
+	edited = prune(edited, gapped_list)
+	(minlist, maxlist) = get_extreme_columns(edited, args.low, args.high, args.b)
+	edited = prune(edited, minlist+maxlist)
+	# compute MI, NCPS, MIc, Z-score MIc + its associated level matrix
+	MI_matrix = mutual_info_matrix(edited, args.b)
+	ncps_array = NCPS_matrix(edited, args.b)
+	MIc_matrix = MI_matrix - ncps_array
+	zMIc_matrix = standardise_matrix(MIc_matrix)
+	# plot MIc Z-scores and its associated level matrix
+	plots.plot_matrix_heatmap(zMIc_matrix,"zMIc")
+	tmatrix = get_level_matrix(zMIc_matrix,args.L)
+	plots.plot_matrix_binary(tmatrix,"zMIc>{}".format(args.L))
+	# Retrieve CM residue pairs in their original coordinates
+	cm_residue_pairs = retrieve_residue_positions(tmatrix,gapped_list,minlist+maxlist)
+	fd = open(args.o, "w")
+	for residue_pair in sorted(cm_residue_pairs):
+		fd.write("%d %d\n" %residue_pair)
+	fd.close()
