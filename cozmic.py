@@ -15,12 +15,9 @@ Created on Mar 7, 2016
 import argparse
 import logging
 import os
-import sys
-import urllib
-import ftplib
 
 # Biopython modules
-from Bio.PDB import PDBList
+from Bio import AlignIO
 from Bio.PDB.PDBParser import PDBParser
 from Bio.Alphabet import generic_protein
 from Bio.Seq import Seq
@@ -78,7 +75,10 @@ def analyze_pdb(pdb_file, atom, blast, db, s, f, m, low, high, b):
 
     # MSA: align the query to its homologs with the method of choice
     msa.call_msa_method(m, blast_out_name, "aligned.fa", "fasta")
-    alignment = mut.AlignIO.read("aligned.fa", "fasta")
+    try:
+        alignment = AlignIO.read("aligned.fa", "fasta")
+    except ValueError:
+        raise ValueError("Blast hasn't produced any results.")
 
     # Prepare the alignment for MIc computations:
     # prune high and low entropy columns

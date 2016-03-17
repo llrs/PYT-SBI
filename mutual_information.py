@@ -35,7 +35,7 @@ def prune(aln, listcol):
 
 def prune_id_gaps(aln, identifier):
     """Prunes the gaps in aln record labeled with identifier"""
-    logging.debug("Pruning id gaps")
+    logging.debug("Pruning id gaps.")
     for i in range(len(aln)):
         if aln[i].id == identifier:
             row = i
@@ -49,6 +49,7 @@ def prune_id_gaps(aln, identifier):
 def prune_first_gaps(aln):
     """It returns a MultipleSeqAlignment object where the columns of
     the input with a gap in the first row have been removed."""
+    logging.debug("Prunning first_gaps.")
     listcol = []
     for i in range(aln.get_alignment_length()):
         if aln[0].seq[i] == '-':
@@ -58,6 +59,7 @@ def prune_first_gaps(aln):
 
 def get_all_gaps(aln):
     """It returns a list of columns of aln with gaps at any position"""
+    logging.info("Identifying positions with gaps.")
     listcol = []
     for j in range(aln.get_alignment_length()):
         for i in range(len(aln)):
@@ -70,6 +72,7 @@ def get_all_gaps(aln):
 def get_level_matrix(matrix, level):
     """It returns a matrix with binary values representing the cells
     going higher the threshold level in input matrix"""
+    logging.info("Selecting the amino acids contacts.")
     (n1, n2) = matrix.shape
     out_matrix = np.empty([n1, n2], dtype=float, order='F')
     for i in range(n1):
@@ -86,6 +89,7 @@ def get_level_matrix(matrix, level):
 def column_frequencies(aln, col):
     """ It returns a dictionary with the frequency for each residue
     in column col of MultipleSeqAlignment aln"""
+    logging.info("Calculating the frecuency for the alignment.")
     alphabet = set('ACDEFGHIKLMNPQRSTVWY-')
     freq = dict.fromkeys(alphabet, 0)
     column = aln[:, col]
@@ -103,6 +107,8 @@ def joint_column_frequencies(aln, col1, col2):
     """It returns a dictionary with the joint frequency for each
     ordered pair (tuple) of residues in columns indexed col1 and col2,
     respectively, of the MultipleSeqAlignment aln"""
+    msg_log = "Calculates the joint frequency of columns {} and {}"
+    logging.info(msg_log.format(col1, col2))
     alphabet = set('ACDEFGHIKLMNPQRSTVWY-')
     index = set()
     for i in alphabet:
@@ -124,6 +130,7 @@ def joint_column_frequencies(aln, col1, col2):
 def entropy(aln, col, base):
     """It returns the entropy for column col in the MultipleSeqAlignment
     object aln"""
+    logging.info("Calculating the entropy at column {}".format(col))
     freq = column_frequencies(aln, col)
     entropy = 0
     for key in freq:
@@ -134,6 +141,8 @@ def entropy(aln, col, base):
 
 def get_extreme_columns(aln, entmin, entmax, base):
     """It returns a list of columns of aln with entropy below the threshold"""
+    msg_log = "Calculating the columns with entropy below the threshold."
+    logging.info(msg_log)
     minlist = []
     maxlist = []
     for i in range(aln.get_alignment_length()):
@@ -147,6 +156,7 @@ def get_extreme_columns(aln, entmin, entmax, base):
 def joint_entropy(aln, col1, col2, base):
     """It returns the joint entropy for col1 and col2 in the
     MultipleSeqAlignment object aln"""
+    logging.info("Calculates joint entropy of {} and {}".format(col1, col2))
     joint_freq = joint_column_frequencies(aln, col1, col2)
     jentropy = 0
     for key in joint_freq:
@@ -157,6 +167,8 @@ def joint_entropy(aln, col1, col2, base):
 
 def mutual_info(aln, col1, col2, base=20):
     """ It returns the MI of a pair of columns"""
+    msg_log = "Calculates the mutual information of {} and {} columns"
+    logging.info(msg_log.format(col1, col2))
     entropy1 = entropy(aln, col1, base)
     entropy2 = entropy(aln, col2, base)
     return entropy1 + entropy2 - joint_entropy(aln, col1, col2, base)
@@ -166,6 +178,8 @@ def mutual_info_matrix(aln, base=20):
     """It returns a square matrix of size len(aln) with MI
     values for each pair of positions in the MultipleSeqAlignment
     object aln"""
+    msg_log = "Calculates the matrix of the mutual information"
+    logging.info(msg_log)
     n = aln.get_alignment_length()
     matrix = np.empty([n, n], dtype=float, order='F')
     for j in range(n):
@@ -179,6 +193,7 @@ def mutual_info_matrix(aln, base=20):
 
 def matrix_hits(binary_matrix):
     """Number of True cells above the diagonal in a binary matrix"""
+    logging.info("Counting how many contacts are predicted.")
     count = 0
     (n1, n2) = binary_matrix.shape
     for i in range(n1):
@@ -187,9 +202,11 @@ def matrix_hits(binary_matrix):
                 count += binary_matrix[i, j]
     return count
 
+
 def standardise_matrix(mat):
     """It resturns a matrix with Z-score values of mat, using the mean and
     standard deviation estimators over all the entries of mat"""
+    logging.info("Standardising the MI with Z-score.")
     myarray = []
     (n1, n2) = mat.shape
     for i in range(n1):
@@ -212,6 +229,7 @@ def CPS(aln, col1, col2, base=20):
     """It returns the pairwise co-evolutionary pattern similarity
     for a pair of columns col1 and col2 of the MultipleSeqAlignment
     object aln"""
+    logging.info("Calculating the co-evolutionary pattern similarity.")
     n = aln.get_alignment_length()
     m = mutual_info_matrix(aln, base)
     cps = 0
@@ -225,6 +243,7 @@ def CPS(aln, col1, col2, base=20):
 def NCPS_matrix(aln, base=20):
     """It returns the matrix of pairwise normalised co-evolutionary
     pattern similarities of the MuplipleSeqAlignment aln"""
+    logging.info("Normalizing co-evolutionary pattern similarities")
     n = aln.get_alignment_length()
     m = mutual_info_matrix(aln, base)
     cps_matrix = np.empty([n, n], dtype=float, order='F')
@@ -247,12 +266,14 @@ def NCPS_matrix(aln, base=20):
 
 def mutual_info_c(aln):
     """It returns the MIc and its standardised version from aln"""
+    logging.info("Calculating the MIc and standard MI.")
     mic = mutual_info_matrix(aln) - NCPS_matrix(aln)
     return (mic, standardise_matrix(mic))
 
 
 def plot_matrix_heatmap(matrix, keyword):
     """Plots a matrix of values as a heatmap"""
+    logging.info("Plotting the heatmap of MI.")
 
     imgplot = plt.imshow(matrix, cmap='Blues', interpolation='none')
     # heatmap = plt.pcolormesh(matrix, cmap='Blues')
@@ -266,7 +287,7 @@ def plot_matrix_heatmap(matrix, keyword):
 
 def plot_matrix_binary(matrix, keyword):
     """Plots a matrix with binary values."""
-
+    logging.info("Plotting the contact map")
     imgplot = plt.imshow(matrix, cmap = 'Greys', interpolation='none')
     plt.title('{}'.format(keyword))
     plt.savefig('{}_heatmap.png'.format(keyword), format="png")
@@ -278,6 +299,7 @@ def reconstruct_position(pos, deleted_pos):
     """Returns the original position of a column, currently in position
     pos, in an MSA that has undergone prunning in columns at the
     positions comprised in the list deleted_pos."""
+    logging.info("Reconstructing original positions of the matrix.")
     diff = 0
     deleted_pos = sorted(deleted_pos)
     for i in range(len(deleted_pos)):
@@ -292,6 +314,7 @@ def retrieve_residue_positions(binary_matrix, gap_list, extreme_list):
     """Retrieves the original coordinates of the set of pairs of residues
     corresponding to True spots in the binary matrix; only those above
     the diagonal suffice"""
+    logging.info("Retrive the original coordinates of the matrix.")
     set_pairs = set()
     (n1, n2) = binary_matrix.shape
     for i in range(n1):
@@ -309,6 +332,7 @@ def retrieve_all_positions(matrix, gap_list, extreme_list):
     """Retrieves a dictionary with keys given by the original coordinates
     of the set of pairs of residues corresponding to all spots in matrix
     above the diagonal, and values corresponding to the values in matrix."""
+    logging.info("Retriving all positions with original coordinates.")
     dict_pairs = {}
     (n1, n2) = matrix.shape
     for i in range(n1):
@@ -323,7 +347,7 @@ def retrieve_all_positions(matrix, gap_list, extreme_list):
     return dict_pairs
 
 if __name__ == "__main__":
-    msg='Runs the computations related to zMIc'
+    msg = 'Runs the computations related to zMIc'
     argparser = argparse.ArgumentParser(description=msg,
                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     # compulsory input
@@ -369,7 +393,7 @@ if __name__ == "__main__":
         gapped_list = get_all_gaps(edited)
     edited = prune(edited, gapped_list)
     (minlist, maxlist) = get_extreme_columns(edited, args.low, args.high,
-											args.b)
+                                            args.b)
     edited = prune(edited, minlist+maxlist)
     # compute MI, NCPS, MIc, Z-score MIc + its associated level matrix
     MI_matrix = mutual_info_matrix(edited, args.b)
