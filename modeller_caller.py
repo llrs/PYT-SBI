@@ -13,6 +13,7 @@ import logging
 import os
 import ftplib
 import urllib
+import sys
 
 from Bio import SeqIO
 
@@ -22,7 +23,27 @@ import modeller.automodel
 from Bio.PDB import PDBList
 from Bio.PDB.PDBParser import PDBParser
 
-env = modeller.environ()  # Some variables needed for the modeller
+
+# Code from https://salilab.org/archives/modeller_usage/2015/msg00043.html
+class ShutUp(object):
+    """Redirects the output of the stdout"""
+    def __enter__(self):
+        self._stdout = sys.stdout
+        sys.stdout = open(os.devnull, 'w')
+
+    def __exit__(self, *args):
+        sys.stdout.close()
+        sys.stdout = self._stdout
+
+
+class env_mod(modeller.environ):
+    """Modified version to redirect the output and open it silently"""
+    def __init__(self):
+        """Modify"""
+        with ShutUp():
+            super(env_mod, self)
+
+env = env_mod()  # Some variables needed for the modeller
 
 
 def pdb_download(code, path=None):
@@ -154,6 +175,7 @@ class modeller_caller(object):
         a.ending_model = 5
         a.make()
         self.outputs = a.outputs
+        print(self.outputs)
         logging.captureWarnings(False)
         return self.outputs
 
