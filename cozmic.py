@@ -48,22 +48,26 @@ if __name__ == '__main__':
 	msg='Runs the main workflow'
 	argparser = argparse.ArgumentParser(description=msg,
 	            formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+	subparsers = argparser.add_subparsers(help='Choose between modelize a pdb or from an existing file')
 	# compulsory input: workflow type and target sequence/structure
-	argparser.add_argument("workflow", help="""Type of workflow that will
-	                       be conducted by the program: "real" will derive
-	                       distances and contacts from the real PDB structure;
-	                       "model" will do so with comparative modelling.""",
-	                       choices=["real","model"])
-	argparser.add_argument("i", help="Target sequence id or filename")
+# 	argparser.add_argument("workflow", help="""Type of workflow that will
+# 	                       be conducted by the program: "real" will derive
+# 	                       distances and contacts from the real PDB structure;
+# 	                       "model" will do so with comparative modelling.""",
+# 	                       choices=["real","model"])
+	real = subparsers.add_parser('real', help='Make a structure of a real pdb')
+	model = subparsers.add_parser('model', help='Modelize a pdb')
+	
+	real.add_argument("i", help="Target sequence id or filename")
 	# argument options for cm module functions
-	argparser.add_argument("-a", help="""Aa atom to calculate distance with:
+	real.add_argument("-a", help="""Aa atom to calculate distance with:
                            CA (alpha carbon), CB (beta carbon), min (minimum 
                            distance between non-hydrogen atom pairs from each
                            residue).""",
                            choices=["CA", "CB", "min"],
                            default="min")
     # argument options for blst module functions
-	argparser.add_argument("-blast", help="""Type of BLAST search to be 
+	real.add_argument("-blast", help="""Type of BLAST search to be 
 	                       performed. Notice that blastp, blast and tblastn
 	                       require a protein sequence, whereas blastx and 
 	                       tblastx require a nucleotide sequence.""",
@@ -72,49 +76,49 @@ if __name__ == '__main__':
                            # blastn does not return protein alignments
 	choices_db = ["pdb", "swissprot", "refseq_protein", "pat",
                   "nr", "env_nr", "tsa_nr"]
-	argparser.add_argument("-db", help="""Set the database of choice where
+	real.add_argument("-db", help="""Set the database of choice where
 	                       BLAST will search.""",
                            choices=choices_db,
                            default="nr")
-	argparser.add_argument("-s", help="""Set the maximum number hits 
+	real.add_argument("-s", help="""Set the maximum number hits 
 	                       resulting from the BLAST search of homologs.""",
                            type=int,
                            default=200)
-	argparser.add_argument("-f", help="""If present, then filter the BLAST 
+	real.add_argument("-f", help="""If present, then filter the BLAST 
 	                       output by genus for attaining non-redundancy; 
 	                       otherwise filter by species.""",
                            action='store_false', 
                            default=True)
     # argument options for msa and mut module functions
-	argparser.add_argument("-g", help="""If present, then prune those 
+	real.add_argument("-g", help="""If present, then prune those 
                            columns of the MSA which have at least one gap.""",
                            action='store_true', 
                            default=False)
 	# argument options for mut module functions
-	argparser.add_argument("-b",
+	real.add_argument("-b",
 						   help="""Base of the logarithms used throughout
 						   entropy and mutual information computations.""",
 						   type=int,
                            default=20)
-	argparser.add_argument("-low",
+	real.add_argument("-low",
                            help="""Mininum entropy threshold allowed
                            for each column in the MSA. Columns below this
                            threshold are pruned for zMIc calculation.""",
                            type=float,
                            default=0.3)
-	argparser.add_argument("-high",
+	real.add_argument("-high",
                            help="""Maximum entropy threshold allowed 
                            for each column in the MSA. Columns above this
                            threshold are pruned for zMIc calculation.""",
                            type=float,
                            default=0.9)
-	argparser.add_argument("-m",
+	real.add_argument("-m",
                            help="""Method of choice for carrying out MSA.""",
                            default="clustalw",
                            choices=["clustalw", "muscle", "t_coffee"])
 	args = argparser.parse_args()
-		
-	if args.workflow == "real":
+	print(args)
+	if args.i:
 		# Retrieve the PDB structure, filter and get sequence
 		parser = PDBParser(PERMISSIVE=1)
 		if os.path.isfile(args.i):
@@ -178,7 +182,7 @@ if __name__ == '__main__':
 		# plot level-precision analysis and CM-distance analysis
 		plots.precision_analysis(zMIc_matrix,cont_matrix,gapped_list,minlist,maxlist,0.0,3.0,60)
 		# Leo's function here!
-	elif args.workflow == "model":
+	elif args.pir:
 		pass
 		
 	
