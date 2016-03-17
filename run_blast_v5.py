@@ -25,7 +25,6 @@ Entrez.email = "ferran.muinos@gmail.com"
 Entrez.tool = "cozmic.py"
 
 
-
 def run_BLAST(query, blast_type, db, size):
     """Runs a blast online.
 

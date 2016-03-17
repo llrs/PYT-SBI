@@ -288,7 +288,7 @@ def plot_matrix_heatmap(matrix, keyword):
 def plot_matrix_binary(matrix, keyword):
     """Plots a matrix with binary values."""
     logging.info("Plotting the contact map")
-    imgplot = plt.imshow(matrix, cmap = 'Greys', interpolation='none')
+    imgplot = plt.imshow(matrix, cmap='Greys', interpolation='none')
     plt.title('{}'.format(keyword))
     plt.savefig('{}_heatmap.png'.format(keyword), format="png")
     fig = plt.figure()
