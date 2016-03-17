@@ -13,9 +13,8 @@ from Bio.Blast import NCBIXML
 from Bio import SeqIO
 from Bio import Entrez
 
-Entrez.email = "lluisrevillasa@gmail.com"
-Entrez.tool = "correlatedmutations.py"
-
+Entrez.email = "ferran.muinos@gmail.com"
+Entrez.tool = "cozmic.py"
 
 def run_BLAST(query, blast_type, db, size, filt=True):
     """Runs a blast online.
@@ -32,7 +31,7 @@ def run_BLAST(query, blast_type, db, size, filt=True):
                                                         query, db, blast_type))
     if os.path.isfile(query):
         record = SeqIO.read(query, format="fasta")
-        result_handle = NCBIWWW.qblast(blast_type, db, record.seq,
+        result_handle = NCBIWWW.qblast(blast_type, db, record.format("fasta"),
                                        hitlist_size=size)
     else:
         result_handle = NCBIWWW.qblast(blast_type, db, query,
