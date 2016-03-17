@@ -17,7 +17,7 @@ from Bio import Entrez
 from Bio.PDB import PDBList
 from Bio.PDB.PDBParser import PDBParser
 from Bio.SeqUtils import seq1
-from Bio.Blast.Applications import NcbiblastxCommandline
+from Bio.Blast.Applications import NcbiblastpCommandline
 
 Entrez.email = "ferran.muinos@gmail.com"
 Entrez.tool = "cozmic.py"
@@ -111,24 +111,30 @@ def pdb_download(code, path=None):
     return file
 
 
-def local_blast(query_, db_):
+def local_blast(query, blast_type, db, remote=True, **kwargs):
     """Function to run with the local blast program"""
-    logging.info("Running blast locally with {} and {}".format(query_, db_))
-    blastx_cline = NcbiblastxCommandline(query=query_, db=db_,
-                                    evalue=0.001, outfmt=5, out="opuntia.xml")
-    stdout, stderr = blastx_cline()
+    logging.info("Running blast locally with {} and {}".format(query, db))
+    if remote:
+        blast_cline = NcbiblastpCommandline(query=query, db=db,
+                                             remote=True, out="blast.out",
+                                             outfmt="5", evalue=0.001, **kwargs)
+    else:
+        blast_cline = NcbiblastpCommandline(query=query, db=db, outfmt="5",
+                                             out="blast.out", evalue=0.001, **kwargs)
+    print(blast_cline)
+    stdout, stderr = blast_cline()
     logging.debug(stderr)
-    logging.info(stdout)
-    result_handle = open("my_blast.xml")
-    blast_record = NCBIXML.read(result_handle)
+    blast_out = open("blast.out", "w")
+    blast_record = NCBIXML.read(blast_out)
     return blast_record
+
 
 if __name__ == "__main__":
     msg = 'Runs blast online.'
     argparser = argparse.ArgumentParser(description=msg,
                         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    argparser.add_argument("i", help="Id of the sequence or file ")
+    argparser.add_argument("input", help="Id of the sequence or file ")
     argparser.add_argument("output_file", help="Output file")
     argparser.add_argument("type", help="Type of blast to perform",
                            choices=["blastp", "blastn", "blast", "blastx",
@@ -141,13 +147,17 @@ if __name__ == "__main__":
                            const=50, action='store_const')
     argparser.add_argument("-f", help="If present don't filter by genus",
                            action='store_false', default=True)
+    argparser.add_argument("-l", help="""
+    If present do a local blast on the db path""",
+                           action="store_true", default=False)
 
     args = argparser.parse_args()
 
-    blast_result = run_BLAST(args.i, args.type, args.db, args.s)
+#     blast_result = run_BLAST(args.input, args.type, args.db, args.s)
+    blast_result = local_blast(args.input, args.type, args.db)
     print("bye")
     ides = analyze_blast_result(blast_result, args.f)
-
+    print(ides)
     ids = list(filter_ids(ides, "gi"))
     ides_pdb = list(filter_ids(ides, "pdb"))
     file_out = open(args.output_file, "w")
@@ -167,12 +177,12 @@ if __name__ == "__main__":
             seq = seq1(residues_names)
             seq.id = pdb
             SeqIO.write(seq, file_out, "fasta")
-
-    if os.path.isfile(args.i):
-        record = SeqIO.read(args.i, format="fasta")
-        SeqIO.write(record, file_out, "fasta")
     else:
-        ids.append(args.i)
-    print(ids)
-    SeqIO.write(retrive_sequence(ids), file_out, "fasta")
-    file_out.close()
+        if os.path.isfile(args.input):
+            record = SeqIO.read(args.input, format="fasta")
+            SeqIO.write(record, file_out, "fasta")
+        else:
+            ids.append(args.input)
+        print(ids)
+        SeqIO.write(retrive_sequence(ids), file_out, "fasta")
+        file_out.close()
