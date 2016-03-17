@@ -63,7 +63,7 @@ if __name__ == '__main__':
                            choices=["CA", "CB", "min"],
                            default="min")
     # argument options for blst module functions
-	argparser.add_argument("-type", help="""Type of BLAST search to be 
+	argparser.add_argument("-blast", help="""Type of BLAST search to be 
 	                       performed. Notice that blastp, blast and tblastn
 	                       require a protein sequence, whereas blastx and 
 	                       tblastx require a nucleotide sequence.""",
@@ -75,7 +75,7 @@ if __name__ == '__main__':
 	argparser.add_argument("-db", help="""Set the database of choice where
 	                       BLAST will search.""",
                            choices=choices_db,
-                           default="swissprot")
+                           default="nr")
 	argparser.add_argument("-s", help="""Set the maximum number hits 
 	                       resulting from the BLAST search of homologs.""",
                            type=int,
@@ -97,15 +97,15 @@ if __name__ == '__main__':
 						   type=int,
                            default=20)
 	argparser.add_argument("-low",
-                           help="""Threshold of mininum entropy allowed
-                           for each column in a MSA. Columns below this
-                           threshold are pruned.""",
+                           help="""Mininum entropy threshold allowed
+                           for each column in the MSA. Columns below this
+                           threshold are pruned for zMIc calculation.""",
                            type=float,
                            default=0.3)
 	argparser.add_argument("-high",
-                           help="""Threshold of maximum entropy allowed 
-                           for each column in a MSA. Columns above this
-                           threshold are pruned.""",
+                           help="""Maximum entropy threshold allowed 
+                           for each column in the MSA. Columns above this
+                           threshold are pruned for zMIc calculation.""",
                            type=float,
                            default=0.9)
 	argparser.add_argument("-m",
@@ -115,7 +115,7 @@ if __name__ == '__main__':
 	args = argparser.parse_args()
 		
 	if args.workflow == "real":
-		# Retrieving the PDB structure, filter and get sequence
+		# Retrieve the PDB structure, filter and get sequence
 		parser = PDBParser(PERMISSIVE=1)
 		if os.path.isfile(args.i):
 			pdbpath = args.i
@@ -124,14 +124,14 @@ if __name__ == '__main__':
 			try:
 				pdbpath = pdbl.retrieve_pdb_file(args.i)
 			except:
-				sys.stderr.write("""cozmic.py exception: make sure your query format is correct.\n""")
+				sys.stderr.write("""exception: make sure your query format is correct.\n""")
 		structure = parser.get_structure("cozmic_pdb_query", pdbpath)
 		residues = cm.filter_residues(structure)
 		s = ""
 		for i in range(len(residues)): 
 			s += SCOPData.protein_letters_3to1.get(residues[i].get_resname(), 'X') 
 		seq = Seq(s,generic_protein)
-		print(seq)
+		sys.stderr.write("Protein sequence:%s\n" %seq)
 		# Compute distances and contact between residues
 		dist_matrix = cm.calc_dist_matrix(residues, args.a)
 		cont_matrix = cm.contact_map(dist_matrix, args.a)
@@ -139,27 +139,24 @@ if __name__ == '__main__':
 		blast_query_name = "cozmic_blast_query.fa"
 		blast_out_name = "cozmic_blast.out"
 		fd = open(blast_query_name,"w")
-		fd.write(">%s\n%s" %("cosmic_blast_query",seq))
+		fd.write(">%s\n%s" %("cozmic_blast_query",seq))
 		fd.close()
 		# Enter the query as first element in the output file
-		file_out = open("cozmic_blast.out", "w")
+		file_out = open(blast_out_name, "w")
 		record = SeqIO.read("cozmic_blast_query.fa", format="fasta")
 		SeqIO.write(record, file_out, "fasta")
 		# Call run_BLAST and write the output in the output file
 		# So far it is not working
-		'''
-		ides = blst.run_BLAST(blast_query_name, args.type, args.db, args.s, args.f)
+		ides = blst.run_BLAST(blast_query_name, args.blast, args.db, args.s, args.f)
 		ids = list(blst.filter_ids(ides, "gi"))
-		file_out = open(blast_out_name, "w")
 		SeqIO.write(blst.retrive_sequence(ids), file_out, "fasta")
 		file_out.close()
-		'''
 		# MSA: align the query to its homologs with the method of choice
 		msa.call_msa_method(args.m, blast_out_name, "aligned.fa", "fasta")
 		alignment = mut.AlignIO.read("aligned.fa", "fasta")
 		# Prepare the alignment for MIc computations: 
 		# prune high and low entropy columns
-		edited = mut.prune_id_gaps(alignment, "1dc8A")
+		edited = mut.prune_id_gaps(alignment, "cozmic_blast_query")
 		gapped_list = []
 		if args.g:
 			gapped_list = mut.get_all_gaps(edited)
@@ -173,7 +170,7 @@ if __name__ == '__main__':
 		zMIc_matrix = mut.standardise_matrix(MIc_matrix)
 		# plot distance, contact, MIc Z-scores and its associated level matrix
 		plots.plot_matrix_heatmap(dist_matrix,"Distance {}".format(args.a))
-		plots.plot_matrix_level_matrix(cont_matrix,"Contact {}".format(args.a))
+		plots.plot_matrix_binary(cont_matrix,"Contact {}".format(args.a))
 		plots.plot_matrix_heatmap(zMIc_matrix,"zMIc")
 		tmatrix = mut.get_level_matrix(zMIc_matrix,2)
 		plots.plot_matrix_binary(tmatrix,"zMIc with L>2")
