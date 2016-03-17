@@ -7,16 +7,23 @@ provided by the NCBI.
 import logging
 import argparse
 import os
+import urllib
+import ftplib
 
 from Bio.Blast import NCBIWWW
 from Bio.Blast import NCBIXML
 from Bio import SeqIO
 from Bio import Entrez
+from Bio.PDB import PDBList
+from Bio.PDB.PDBParser import PDBParser
+from Bio.SeqUtils import seq1
+from Bio.Blast.Applications import NcbiblastxCommandline
 
 Entrez.email = "ferran.muinos@gmail.com"
 Entrez.tool = "cozmic.py"
 
-def run_BLAST(query, blast_type, db, size, filt=True):
+
+def run_BLAST(query, blast_type, db, size):
     """Runs a blast online.
 
     query is the file with the sequence.
@@ -37,12 +44,19 @@ def run_BLAST(query, blast_type, db, size, filt=True):
         result_handle = NCBIWWW.qblast(blast_type, db, query,
                                        hitlist_size=size)
     blast_record = NCBIXML.read(result_handle)
+    return blast_record
 
-    sq = blast_record.query_length
+
+def analyze_blast_result(blast_out, filt=True):
+    """Classify the result of blast."""
+    logging.info("Analysing the result of blast %s.", blast_out.query_id)
+    sq = blast_out.query_length
     id_set = []
     genere_set = set()
-    if filt:
-        for alignment in blast_record.alignments:
+    for alignment in blast_out.alignments:
+        print("why isn't it working?")
+        logging.debug("Analyzing alignment: %s", alignment.title)
+        if filt:
             if "[" in alignment.title:
                 spiece = alignment.title.split('[')[-1].rstrip("]")
                 genere = spiece.split()[0]
@@ -55,10 +69,14 @@ def run_BLAST(query, blast_type, db, size, filt=True):
                                       values[2]: values[3]}
                             id_set.append(id_add)
                             genere_set.add(genere)
-    else:
-        for alignment in blast_record.alignments:
+                    else:
+                        msg_hsp = "Finishing high-scoring pair of an alignment"
+                        logging.debug(msg_hsp)
+        else:
             values = alignment.hit_id.split("|")
             id_set.append({values[0]: values[1], values[2]: values[3]})
+    else:
+        logging.debug("No more alignments left.")
     return id_set
 
 
@@ -77,6 +95,33 @@ def filter_ids(ids, key):
     logging.info("Extracting ids for %s.", key)
     return map(lambda x: x[key], ids)
 
+
+def pdb_download(code, path=None):
+    """Downloads the structure of the pdb on a file.
+
+    Returns the file name where it is stored"""
+    logging.info("Downloading pdb %s.", code)
+    logging.captureWarnings(True)
+    pdbl = PDBList(obsolete_pdb=os.getcwd())
+    if path is None:
+        file = pdbl.retrieve_pdb_file(code)
+    else:
+        file = pdbl.retrieve_pdb_file(code, pdir=path)
+    logging.captureWarnings(False)
+    return file
+
+
+def local_blast(query_, db_):
+    """Function to run with the local blast program"""
+    logging.info("Running blast locally with {} and {}".format(query_, db_))
+    blastx_cline = NcbiblastxCommandline(query=query_, db=db_,
+                                    evalue=0.001, outfmt=5, out="opuntia.xml")
+    stdout, stderr = blastx_cline()
+    logging.debug(stderr)
+    logging.info(stdout)
+    result_handle = open("my_blast.xml")
+    blast_record = NCBIXML.read(result_handle)
+    return blast_record
 
 if __name__ == "__main__":
     msg = 'Runs blast online.'
@@ -99,14 +144,35 @@ if __name__ == "__main__":
 
     args = argparser.parse_args()
 
-    ides = run_BLAST(args.i, args.type, args.db, args.s, args.f)
+    blast_result = run_BLAST(args.i, args.type, args.db, args.s)
+    print("bye")
+    ides = analyze_blast_result(blast_result, args.f)
 
     ids = list(filter_ids(ides, "gi"))
+    ides_pdb = list(filter_ids(ides, "pdb"))
     file_out = open(args.output_file, "w")
+
+    for pdb in ides_pdb:
+        try:
+            pdb_file = pdb_download(pdb, os.getcwd())
+        except urllib.error.URLError:
+            pass
+        except ftplib.error_perm:
+            pass
+        else:
+            parser = PDBParser(PERMISSIVE=1)
+            structure = parser.get_structure(pdb, pdb_file)
+            residues = cm.filter_residues(structure)
+            residues_names = list(map(lambda x: x.get_id(), residues))
+            seq = seq1(residues_names)
+            seq.id = pdb
+            SeqIO.write(seq, file_out, "fasta")
+
     if os.path.isfile(args.i):
         record = SeqIO.read(args.i, format="fasta")
         SeqIO.write(record, file_out, "fasta")
     else:
         ids.append(args.i)
+    print(ids)
     SeqIO.write(retrive_sequence(ids), file_out, "fasta")
     file_out.close()
