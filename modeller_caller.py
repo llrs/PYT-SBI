@@ -145,13 +145,15 @@ class modeller_caller(object):
         env.libs.parameters.read(file='$(LIB)/par.lib')  # read parameters
         # Setting to read all the models (not sure if it is the right way)
         mdl = modeller.scripts.complete_pdb(self.env, pdb_file,
-                            model_segment=('FIRST:A', 'LAST:Z'))
+                                            model_segment=('FIRST:A', 'LAST:Z')
+                                            )
         s = modeller.selection(mdl)
         output_op = 'ENERGY_PROFILE NO_REPORT VERY_LONG GRADIENT'
         if name is not None:
             score = s.assess_dope(output=output_op,
-                        file='{}.profile'.format(name),
-                        normalize_profile=True, smoothing_window=15)
+                                  file='{}.profile'.format(name),
+                                  normalize_profile=True,
+                                  smoothing_window=15)
         else:
             score = s.assess_normalized_dope(normalize_profile=True,
                                              smoothing_window=15)
@@ -168,8 +170,8 @@ class modeller_caller(object):
         seq is the sequence we want to create the structure"""
         logging.captureWarnings(True)
         a = modeller.automodel.automodel(self.env, alnfile=alig_pir,
-                knowns=known, sequence=seq,
-                assess_methods=modeller.automodel.assess.DOPE)
+                                         knowns=known, sequence=seq,
+                                assess_methods=modeller.automodel.assess.DOPE)
 
         a.starting_model = 1
         a.ending_model = 5

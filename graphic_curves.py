@@ -22,6 +22,7 @@ from Bio.Seq import Seq
 import contact_map as cm
 import mutual_information as mut
 import msa_caller as msa
+import run_blast_v5 as blst
 
 
 def plot_twin_curves(cutoff_list, hit_list, precision_list):
