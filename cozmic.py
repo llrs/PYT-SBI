@@ -48,7 +48,8 @@ if __name__ == '__main__':
     msg_subparser = 'Choose between modelize a pdb or from an existing file'
     subparsers = argparser.add_subparsers(help=msg_subparser)
     argparser.add_argument("-d",
-                           help="""Decide the degree of the logging""",
+                           help="""Decide the degree of the logging. This
+                           option can be used whatever other options are.""",
                            action="count",
                            default=1)
 
@@ -56,7 +57,11 @@ if __name__ == '__main__':
                                  formatter_class=default_help)
     model = subparsers.add_parser('model', help='Modelize a pdb',
                                   formatter_class=default_help)
-
+    model.add_argument("seq", help="Name of the sequence to analyse")
+    model.add_argument("models", help="Models of the file")
+    model.add_argument("-pir", help="Name of the file in pir format")
+    model.add_argument("-fasta",
+                       help="File with sequences in fasta format")
     real.add_argument("i", help="Target sequence id or filename")
     # argument options for cm module functions
     real.add_argument("-a", help="""Aa atom to calculate distance with:
@@ -152,7 +157,7 @@ if __name__ == '__main__':
         structure = parser.get_structure("cozmic_pdb_query", pdbpath)
         residues = cm.filter_residues(structure)
         s = ""
-        for residue in range(residues):
+        for residue in residues:
             s += SCOPData.protein_letters_3to1.get(residue.get_resname(), 'X')
         seq = Seq(s, generic_protein)
         sys.stderr.write("Protein sequence:%s\n" % seq)
@@ -209,7 +214,7 @@ if __name__ == '__main__':
         mm = minlist + maxlist
         (cutoff_list, hit_list, precision_list) = plots.precision_analysis(
         zMIc_matrix, cont_matrix, gapped_list, mm, 0.0, 3.0, 60)
-        plots.plot_twin_curves(cutoff_list, hit_list, precision_list)
+        plots.plot_twin_curves(cutoff_list, hit_list, precision_list, args.i)
         # Leo's function here!
     elif args.pir:
         env = mc.env_mod()  # Some variables needed for the modeller
