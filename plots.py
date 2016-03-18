@@ -26,7 +26,7 @@ def plot_heatmap(distances, name_file, title, option):
 
 
 def plot_contacts(contacts, name_file, title, option):
-    """Plots the contact map between residues"""
+    """Plots the contact map between residues."""
     logging.info("Plotting the contact map for {}".format(name_file))
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -38,50 +38,50 @@ def plot_contacts(contacts, name_file, title, option):
 
 
 def plot_matrix_binary(matrix, name_file, title, option):
-    """Plots a matrix with binary values: black and white"""
-    imgplot = plt.imshow(matrix, cmap='Greys', interpolation='none')
-    plt.title(title)
+    """Plots a matrix with binary values: black and white."""
+    logging.info("Plotting the contact map for {}".format(name_file))
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    fig.suptitle(title)
+    imgplot = ax.imshow(matrix, cmap='Greys', interpolation='none')
     plt.savefig('contact_map_{}_{}.png'.format(name_file, option),
                 format="png")
-    fig = plt.figure()
+#     fig = plt.figure()
 #     fig.show()
 
 
 def plot_twin_curves(cutoff_list, hit_list, precision_list):
-    """
-    Plots the cutoff_list x hit_list and cutoff_list x precision_list 
-    curves in the same plot with two different yaxis labels.
-    """
+    """Plots the cutoff_list x hit_list and cutoff_list x precision_list
+    curves in the same plot with two different yaxis labels."""
     fig, ax1 = plt.subplots()
-    ax1.plot(cutoff_list, hit_list,'ob-')
+    ax1.plot(cutoff_list, hit_list, 'ob-')
     ax1.set_xlabel('Cutoff level L')
     # Make the y-axis label match the line color.
     ax1.set_ylabel('Predicted CM residue pairs', color='b')
     # Make the second plot with another axis
     ax2 = ax1.twinx()
-    ax2.plot(cutoff_list, precision_list,'or-')
+    ax2.plot(cutoff_list, precision_list, 'or-')
     ax2.set_ylabel('Precision', color='r')
     plt.show()
 
 
-def precision_analysis(zMIc_matrix,cont_matrix,gapped_list,minlist,maxlist,l=0.0,h=3.0,num=60):
-    """
-    Given zMIc and contacts, computes and associates the precision
-    with the number of CM predictions with the threshold level 
-    """
+def precision_analysis(zMIc_matrix, cont_matrix, gapped_list, minlist, maxlist, l=0.0, h=3.0, num=60):
+    """Given zMIc and contacts, computes and associates the precision
+    with the number of CM predictions with the threshold level"""
     cutoff_list = []
     hit_list = []
     precision_list = []
-    for cutoff in np.linspace(l,h,num):
+    for cutoff in np.linspace(l, h,num):
         cutoff_list.append(cutoff)
-        tmatrix = mut.get_level_matrix(zMIc_matrix,cutoff)
+        tmatrix = mut.get_level_matrix(zMIc_matrix, cutoff)
         hits = mut.matrix_hits(tmatrix)
         hit_list.append(hits)
-        cm_residue_pairs = mut.retrieve_residue_positions(tmatrix,gapped_list,minlist+maxlist)
+        cm_residue_pairs = mut.retrieve_residue_positions(tmatrix, gapped_list,
+                                                          minlist + maxlist)
         print(cm_residue_pairs)
         count = 0
         for rp in cm_residue_pairs:
-            count += cont_matrix[rp[0],rp[1]]
+            count += cont_matrix[rp[0], rp[1]]
         precision_list.append(count/hits)
     plot_twin_curves(cutoff_list, hit_list, precision_list)
 

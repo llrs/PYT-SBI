@@ -145,5 +145,5 @@ if __name__ == "__main__":
     plots.plot_heatmap(dist_matrix, name_f, title_dist, args.a)
     cont_matrix = contact_map(dist_matrix, args.a, dist)
     title_cont = 'Contacts of the file {}'.format(name_f)
-    plots.plot_contacts(cont_matrix, name_f, title_cont, args.a)
+    plots.plot_matrix_binary(cont_matrix, name_f, title_cont, args.a)
     logging.captureWarnings(False)
