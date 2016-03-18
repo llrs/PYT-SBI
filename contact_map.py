@@ -13,7 +13,6 @@ import logging
 import os
 
 import numpy as np
-from Bio import SeqIO
 from Bio.PDB.PDBParser import PDBParser
 import matplotlib.pyplot as plt
 
@@ -35,9 +34,9 @@ def calc_residue_dist(residue_one, residue_two, atom):
 
 def calc_min_dist(residue_one, residue_two):
     """Returns the minimum distance between two residues."""
-    logging.debug("Calculating minimum distance between {} {} and {} {}.".format(
-                   residue_one.get_resname(), residue_one.id[1],
-                   residue_two.get_resname(), residue_two.id[1]))
+    log_msg = "Calculating minimum distance between {} {} and {} {}."
+    logging.debug(log_msg.format(residue_one.get_resname(), residue_one.id[1],
+                                 residue_two.get_resname(), residue_two.id[1]))
     distances = []
     for a1 in residue_one:
         for a2 in residue_two:
@@ -101,24 +100,24 @@ def contact_map(distance_map, atom, dist=None):
     return(answer)
 
 
-def plot_distance(distances, name_file, option):
+def plot_distance(distances, name_file, title, option):
     """Plots the distances between the residues."""
     logging.info("Plotting the distance map for {}".format(name_f))
     plt.imshow(distances, interpolation='none')
     heatmap = plt.pcolormesh(distances)
-    plt.title('Distances of the file {}'.format(name_file))
+    plt.title(title)
     legend = plt.colorbar(heatmap)
     legend.set_label("Angstroms")
     plt.savefig('distance_map_{}_{}.png'.format(name_file, option),
                 format="png")
 
 
-def plot_contacts(contacts, name_file, option):
+def plot_contacts(contacts, name_file, title, option):
     """Plots the contact map between residues"""
     logging.info("Plotting the contact map for {}".format(name_file))
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    fig.suptitle("Contact between residues of {}".format(name_file))
+    fig.suptitle(title)
     ax.imshow(contacts, aspect='auto',
               cmap=plt.cm.gray, interpolation='nearest')
     plt.savefig("contact_map_{}_{}.png".format(name_file, option),
@@ -139,21 +138,20 @@ if __name__ == "__main__":
                            help="""Atom to calculate distance with
                            CA: Carbon Alpha, CB: Carbon Beta.""",
                            default="min", choices=["CA", "CB", "min"])
-    {"CA": 15, "CB": 12, "min": 6}
     argparser.add_argument("-CA",
                            help="""Set the threshold distance for Carbon alpha
                            """,
                            type=int,
-                           defaul=15)
+                           default=15)
     argparser.add_argument("-CB",
                            help="""Set the threshold distance for Carbon beta
                            """,
                            type=int,
-                           defaul=12)
+                           default=12)
     argparser.add_argument("-min",
                            help="""Set the minimal threshold distance""",
                            type=int,
-                           defaul=16)
+                           default=16)
     args = argparser.parse_args()
     dist = {"CA": args.CA, "CB": args.CB, "min": args.min}
     base = os.path.basename(args.file)
@@ -165,7 +163,9 @@ if __name__ == "__main__":
 
     residues = filter_residues(structure)
     dist_matrix = calc_dist_matrix(residues, args.a)
-    plot_distance(dist_matrix, name_f, args.a)
-    cont_matrix = contact_map(dist_matrix, args.a)
-    plot_contacts(cont_matrix, name_f, args.a, dist)
+    title_dist = 'Distances of the file {}'.format(name_f)
+    plot_distance(dist_matrix, name_f, title_dist, args.a)
+    cont_matrix = contact_map(dist_matrix, args.a, dist)
+    title_cont = 'Contacts of the file {}'.format(name_f)
+    plot_contacts(cont_matrix, name_f, title_cont, args.a)
     logging.captureWarnings(False)
