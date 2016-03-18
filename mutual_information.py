@@ -273,6 +273,7 @@ def standardise_matrix(mat):
     mymean = np.mean(myarray)
     mystd = np.std(myarray)
     matrix = np.empty([n1, n2], dtype=float, order='F')
+
     for i in range(n1):
         for j in range(n2):
             if i == j:
@@ -294,6 +295,10 @@ def CPS(aln, col1, col2, base=20):
     logging.info("Calculating the co-evolutionary pattern similarity.")
 
     n = aln.get_alignment_length()
+
+    if n <= 1:
+        raise ValueError("Too few sequence in the alignment provided.")
+
     m = mutual_info_matrix(aln, base)
     cps = 0
     for k in range(n):
@@ -314,6 +319,10 @@ def NCPS_matrix(aln, base=20):
     logging.info("Normalizing co-evolutionary pattern similarities")
 
     n = aln.get_alignment_length()
+
+    if n <= 1:
+        raise ValueError("Too few sequence in the alignment provided. Length of the aligment {}".format(n))
+
     m = mutual_info_matrix(aln, base)
     cps_matrix = np.empty([n, n], dtype=float, order='F')
     den = 0
@@ -410,10 +419,11 @@ def retrieve_all_positions(matrix, gap_list, extreme_list):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(filename='mutual_information.log', level=logging.DEBUG)
     fmt = """%(asctime)s - %(filename)s - %(funcName)s - %(levelname)s
      - %(message)s"""
-    formatter = logging.Formatter(fmt)
+    logging.basicConfig(filename='mutual_information.log', level=logging.DEBUG,
+                        format=fmt)
+
     msg = 'Runs the computations related to zMIc'
     args_helper = argparse.ArgumentDefaultsHelpFormatter
     argparser = argparse.ArgumentParser(description=msg,
@@ -453,7 +463,7 @@ if __name__ == "__main__":
                            default=0.9)
     args = argparser.parse_args()
     # Read MSA
-    alignment = AlignIO.read(args.i, "clustal")
+    alignment = AlignIO.read(args.i, "fasta")
     # Prepare the alignment for MIc computations:
     # prune high and low entropy columns
     edited = prune_id_gaps(alignment, args.id)
@@ -471,9 +481,9 @@ if __name__ == "__main__":
     zMIc_matrix = standardise_matrix(MIc_matrix)
     # plot MIc Z-scores and its associated level matrix
     title_zmic = 'zMic of the file {}'.format(args.i)
-    plots.plot_heatmap(zMIc_matrix, args.i, title_zmic, args.low)
+    plots.plot_heatmap(zMIc_matrix, args.i, title_zmic, args.low, "zMIc")
     tmatrix = get_level_matrix(zMIc_matrix, args.L)
-    title_zmic_b = "zMic contacts  with L>{} of the file {}".format(args.L,
+    title_zmic_b = "zMic predicted contacts with L>{} of the file {}".format(args.L,
                                                                     args.i)
     plots.plot_matrix_binary(tmatrix, args.i, title_zmic_b, args.L)
     # Retrieve CM residue pairs in their original coordinates
