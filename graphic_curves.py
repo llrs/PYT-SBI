@@ -95,12 +95,11 @@ if __name__ == '__main__':
     fd.close()
     # call BLAST search: as of today the output is named "blast_record.fa"
     blast_result = blst.run_BLAST('temp.fa', "blastp", "swissprot", 1000)
-    ides = blst.analyze_blast_result(blast_result, args.f)
+    ides = blst.analyze_blast_result(blast_result, True)
     ids = list(blst.filter_ids(ides, "gi"))
     SeqIO.write(blst.retrive_sequence(ids), "blast_record.fa", "fasta")
     # get the MSA from the blast_record
-    msa.call_msa_method(args.m, "blast_record.fa", "aligned.aln",
-                        find_executable(args.m))
+    msa.call_msa_method(args.m, "blast_record.fa", "aligned.aln", "fasta")
     alignment = mut.AlignIO.read("blast_record.aln", "clustal")
     # compute zMIc matrix
     edited = mut.prune_id_gaps(alignment, "target")

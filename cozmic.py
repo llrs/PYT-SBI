@@ -191,8 +191,10 @@ if __name__ == '__main__':
         title_zmic_b = "zMic contacts  with L>2 of the file".format(args.i)
         plots.plot_matrix_binary(tmatrix, args.i, title_zmic_b, args.a)
         # plot level-precision analysis and CM-distance analysis
-        plots.precision_analysis(zMIc_matrix, cont_matrix, gapped_list,
-                                 minlist, maxlist, 0.0, 3.0, 60)
+        mm = minlist + maxlist
+        (cutoff_list, hit_list, precision_list) = plots.precision_analysis(
+        zMIc_matrix, cont_matrix, gapped_list, mm, 0.0, 3.0, 60)
+        plots.plot_twin_curves(cutoff_list, hit_list, precision_list)
         # Leo's function here!
     elif args.pir:
         pass

@@ -48,28 +48,39 @@ def plot_twin_curves(cutoff_list, hit_list, precision_list, name_file):
     ax2.set_ylabel('Precision', color='r')
     plt.savefig('cutoff_zMIc_{}.png'.format(name_file),
                 format="png")
-    plt.show()
+#     plt.show()
 
 
-def precision_analysis(zMIc_matrix, cont_matrix, gapped_list, minlist, maxlist, l=0.0, h=3.0, num=60):
-    """Given zMIc and contacts, computes and associates the precision
-    with the number of CM predictions with the threshold level"""
+def precision_analysis(zMIc_matrix, cont_matrix, gapped_list, mm, l=0.0, h=3.0, num=60):
+    """Calculates precision and hits for different threshold levels of zMIc.
+
+   zMIc matrix: with the score of zMIc
+   cont_matrix: matrix of contact residues by a default distance.
+   gapped_list: columns of the zMIc that had gaps and weren't used
+   mm list the sum of minlist and maxlist with prunned columns
+   l, h, num: are the parameters for np.linspace
+   l: start, h:stop, num: the number of intervals to generate
+
+   Return a list with the cutoff, the number of hits, and the precision foreach
+   interval"""
     cutoff_list = []
     hit_list = []
     precision_list = []
-    for cutoff in np.linspace(l, h,num):
+    for cutoff in np.linspace(l, h, num):
         cutoff_list.append(cutoff)
         tmatrix = mut.get_level_matrix(zMIc_matrix, cutoff)
         hits = mut.matrix_hits(tmatrix)
         hit_list.append(hits)
         cm_residue_pairs = mut.retrieve_residue_positions(tmatrix, gapped_list,
-                                                          minlist + maxlist)
+                                                          mm)
         print(cm_residue_pairs)
         count = 0
         for rp in cm_residue_pairs:
             count += cont_matrix[rp[0], rp[1]]
         precision_list.append(count/hits)
-    plot_twin_curves(cutoff_list, hit_list, precision_list)
+    else:
+        return(cutoff_list, hit_list, precision_list)
+
 
 if __name__ == "__main__":
     pass

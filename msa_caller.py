@@ -6,7 +6,6 @@ Created on Mar 13, 2016
 @author: Leo, Ferran, Lluís
 """
 # standard modules
-import os
 import argparse
 import logging
 from distutils.spawn import find_executable
@@ -15,6 +14,7 @@ from distutils.spawn import find_executable
 from Bio.Align.Applications import ClustalwCommandline
 from Bio.Align.Applications import MuscleCommandline
 from Bio.Align.Applications import TCoffeeCommandline
+from Bio.Application import ApplicationError
 
 
 def call_msa_method(method, in_file, out_file, output_format=None):
@@ -32,19 +32,21 @@ def call_msa_method(method, in_file, out_file, output_format=None):
 
     if method == "clustalw":
         cline = ClustalwCommandline(method,
-                                infile=in_file, output=output_format,
-                                OUTFILE=out_file, type="PROTEIN")
+                                    infile=in_file, output=output_format,
+                                    OUTFILE=out_file, type="PROTEIN")
     elif method == "muscle":
         cline = MuscleCommandline(method,
                                   input=in_file,
                                   out=out_file)
     elif method == "t_coffee":
         cline = TCoffeeCommandline("t_coffee",
-                                infile=in_file,
-                                output=output_format,
-                                outfile=out_file)
-
-    stdout, stderr = cline()
+                                   infile=in_file,
+                                   output=output_format,
+                                   outfile=out_file)
+    try:
+        stdout, stderr = cline()
+    except ApplicationError:
+        raise IOError("The input file doesn't contain an alignment!")
     logging.debug(stderr)
     return(stdout)
 
@@ -52,7 +54,7 @@ if __name__ == '__main__':
     msg = 'Carries out a MSA'
     programs_MSA = ["clustalw", "muscle", "t_coffee"]
     argparser = argparse.ArgumentParser(description=msg,
-						formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+                        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     argparser.add_argument("file",
                            help="File with sequences to be aligned.")
     argparser.add_argument("-m",
