@@ -169,30 +169,10 @@ if __name__ == "__main__":
 #     blast_result = local_blast(args.input, args.type, args.db)
     ides = analyze_blast_result(blast_result, args.f)
     ids = list(filter_ids(ides, "gi"))
-    ides_pdb = list(filter_ids(ides, "pdb"))
+#     ides_pdb = list(filter_ids(ides, "pdb"))
+    print(len(ids))
     file_out = open(args.output_file, "w")
-
-    for pdb in ides_pdb:
-        try:
-            pdb_file = plots.pdb_download(pdb, os.getcwd())
-        except urllib.error.URLError:
-            pass
-        except ftplib.error_perm:
-            pass
-        else:
-            parser = PDBParser(PERMISSIVE=1)
-            structure = parser.get_structure(pdb, pdb_file)
-            residues = cm.filter_residues(structure)
-            residues_names = list(map(lambda x: x.get_id(), residues))
-            seq = seq1(residues_names)
-            seq.id = pdb
-            SeqIO.write(seq, file_out, "fasta")
-    else:
-        if os.path.isfile(args.input):
-            record = SeqIO.read(args.input, format="fasta")
-            SeqIO.write(record, file_out, "fasta")
-        else:
-            ids.append(args.input)
-        print(ids)
-        SeqIO.write(retrive_sequence(ids), file_out, "fasta")
-        file_out.close()
+    logging.info("Saving the output file {}".format(file_out))
+    SeqIO.write(retrive_sequence(ids), file_out, "fasta")
+    file_out.close()
+    
