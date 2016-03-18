@@ -41,13 +41,20 @@ Entrez.tool = "cozmic.py"
 
 if __name__ == '__main__':
     msg = 'Runs the main workflow'
+    default_help = argparse.ArgumentDefaultsHelpFormatter
     argparser = argparse.ArgumentParser(description=msg,
-                formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+                                        formatter_class=default_help)
     msg_subparser = 'Choose between modelize a pdb or from an existing file'
     subparsers = argparser.add_subparsers(help=msg_subparser)
+    argparser.add_argument("-d",
+                           help="""Decide the degree of the logging""",
+                           action="count",
+                           default=1)
 
-    real = subparsers.add_parser('real', help='Make a structure of a real pdb')
-    model = subparsers.add_parser('model', help='Modelize a pdb')
+    real = subparsers.add_parser('real', help='Make a structure of a real pdb',
+                                 formatter_class=default_help)
+    model = subparsers.add_parser('model', help='Modelize a pdb',
+                                  formatter_class=default_help)
 
     real.add_argument("i", help="Target sequence id or filename")
     # argument options for cm module functions
@@ -121,8 +128,15 @@ if __name__ == '__main__':
                       atoms.""",
                       type=int,
                       default=6)
+         
     args = argparser.parse_args()
-    print(args)
+
+    logging.basicConfig(filename='cozmic.log', level=int(100/(args.d*10)))
+    fmt = """%(asctime)s - %(filename)s - %(funcName)s - %(levelname)s
+      - %(message)s"""
+    formatter = logging.Formatter(fmt)
+
+    print("You are currently running the program with: ", args)
     if args.i:
         # Retrieve the PDB structure, filter and get sequence
         parser = PDBParser(PERMISSIVE=1)

@@ -15,28 +15,37 @@ import mutual_information as mut
 
 def plot_heatmap(distances, name_file, title, option):
     """Plots the distances between the residues."""
+
     logging.info("Plotting the distance map for {}".format(name_file))
+
     plt.imshow(distances, interpolation='none')
     heatmap = plt.pcolormesh(distances)
     plt.title(title)
     legend = plt.colorbar(heatmap)
     legend.set_label("Angstroms")
-    plt.savefig('heatmap_{}_{}.png'.format(name_file, option),
-                format="png")
+    name_out = 'heatmap_{}_{}.png'.format(name_file, option)
+    plt.savefig(name_out, format="png")
+    return name_out
+
 
 def plot_matrix_binary(matrix, name_file, title, option):
     """Plots the contact map between residues black means contact."""
+
     logging.info("Plotting the contact map for {}".format(name_file))
+
     fig = plt.figure()
     ax = fig.add_subplot(111)
     fig.suptitle(title)
     imgplot = ax.imshow(matrix, cmap='Greys', interpolation='none')
-    plt.savefig('contact_map_{}_{}.png'.format(name_file, option),
-                format="png")
+    name_out = 'contact_map_{}_{}.png'.format(name_file, option)
+    plt.savefig(name_out, format="png")
+    return name_out
 
 
 def plot_twin_curves(cutoff_list, hit_list, precision_list, name_file):
     """Plots the precision and the hits depending on the cutoff."""
+
+    logging.info("Plotting the precision and hits against zMIc cutoff.")
     fig, ax1 = plt.subplots()
     ax1.plot(cutoff_list, hit_list, 'ob-')
     ax1.set_xlabel('Cutoff level L')
@@ -46,23 +55,27 @@ def plot_twin_curves(cutoff_list, hit_list, precision_list, name_file):
     ax2 = ax1.twinx()
     ax2.plot(cutoff_list, precision_list, 'or-')
     ax2.set_ylabel('Precision', color='r')
-    plt.savefig('cutoff_zMIc_{}.png'.format(name_file),
-                format="png")
+    name_out = 'cutoff_zMIc_{}.png'.format(name_file)
+    plt.savefig(name_out, format="png")
+    return name_out
 #     plt.show()
 
 
-def precision_analysis(zMIc_matrix, cont_matrix, gapped_list, mm, l=0.0, h=3.0, num=60):
+def precision_analysis(zMIc_m, cont_m, gapped_list, mm, l=0.0, h=3.0, num=60):
     """Calculates precision and hits for different threshold levels of zMIc.
 
-   zMIc matrix: with the score of zMIc
-   cont_matrix: matrix of contact residues by a default distance.
-   gapped_list: columns of the zMIc that had gaps and weren't used
-   mm list the sum of minlist and maxlist with prunned columns
-   l, h, num: are the parameters for np.linspace
-   l: start, h:stop, num: the number of intervals to generate
+    zMIc_m: matrix with the score of zMIc
+    cont_m: matrix of contact residues by a default distance.
+    gapped_list: columns of the zMIc that had gaps and weren't used
+    mm list the sum of minlist and maxlist with prunned columns
+    l, h, num: are the parameters for np.linspace
+    l: start, h:stop, num: the number of intervals to generate
 
-   Return a list with the cutoff, the number of hits, and the precision foreach
-   interval"""
+    Return a list with the cutoff, the number of hits and the precision for
+    each interval"""
+
+    logging.info("Calculating the precision and number of hits.")
+
     cutoff_list = []
     hit_list = []
     precision_list = []
