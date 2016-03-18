@@ -16,6 +16,8 @@ import numpy as np
 from Bio.PDB.PDBParser import PDBParser
 import matplotlib.pyplot as plt
 
+import plots
+
 
 def calc_residue_dist(residue_one, residue_two, atom):
     """Returns the distance between two residues between the selected atom."""
@@ -102,7 +104,7 @@ def contact_map(distance_map, atom, dist=None):
 
 def plot_distance(distances, name_file, title, option):
     """Plots the distances between the residues."""
-    logging.info("Plotting the distance map for {}".format(name_f))
+    logging.info("Plotting the distance map for {}".format(name_file))
     plt.imshow(distances, interpolation='none')
     heatmap = plt.pcolormesh(distances)
     plt.title(title)
@@ -164,8 +166,8 @@ if __name__ == "__main__":
     residues = filter_residues(structure)
     dist_matrix = calc_dist_matrix(residues, args.a)
     title_dist = 'Distances of the file {}'.format(name_f)
-    plot_distance(dist_matrix, name_f, title_dist, args.a)
+    plots.plot_distance(dist_matrix, name_f, title_dist, args.a)
     cont_matrix = contact_map(dist_matrix, args.a, dist)
     title_cont = 'Contacts of the file {}'.format(name_f)
-    plot_contacts(cont_matrix, name_f, title_cont, args.a)
+    plots.plot_contacts(cont_matrix, name_f, title_cont, args.a)
     logging.captureWarnings(False)

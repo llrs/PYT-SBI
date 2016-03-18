@@ -22,7 +22,7 @@ from Bio.Seq import Seq
 import contact_map as cm
 import mutual_information as mut
 import msa_caller as msa
-import run_blast_v5 as blst
+import blast as blst
 
 
 def plot_twin_curves(cutoff_list, hit_list, precision_list):
@@ -73,7 +73,7 @@ if __name__ == '__main__':
     argparser.add_argument("-m",
                            help="Method for MSA.",
                            default="clustalw",
-                           choices=["muscle", "t_coffee"])
+                           choices=["muscle", "t_coffee", "clustalw"])
     args = argparser.parse_args()
 
     # get PDB and distance matrix
