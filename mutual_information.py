@@ -273,6 +273,7 @@ def standardise_matrix(mat):
     mymean = np.mean(myarray)
     mystd = np.std(myarray)
     matrix = np.empty([n1, n2], dtype=float, order='F')
+
     for i in range(n1):
         for j in range(n2):
             if i == j:
@@ -294,6 +295,10 @@ def CPS(aln, col1, col2, base=20):
     logging.info("Calculating the co-evolutionary pattern similarity.")
 
     n = aln.get_alignment_length()
+
+    if n <= 1:
+        raise ValueError("Too few sequence in the alignment provided.")
+
     m = mutual_info_matrix(aln, base)
     cps = 0
     for k in range(n):
@@ -314,6 +319,10 @@ def NCPS_matrix(aln, base=20):
     logging.info("Normalizing co-evolutionary pattern similarities")
 
     n = aln.get_alignment_length()
+
+    if n <= 1:
+        raise ValueError("Too few sequence in the alignment provided. Length of the aligment {}".format(n))
+
     m = mutual_info_matrix(aln, base)
     cps_matrix = np.empty([n, n], dtype=float, order='F')
     den = 0
@@ -410,10 +419,11 @@ def retrieve_all_positions(matrix, gap_list, extreme_list):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(filename='mutual_information.log', level=logging.DEBUG)
     fmt = """%(asctime)s - %(filename)s - %(funcName)s - %(levelname)s
      - %(message)s"""
-    formatter = logging.Formatter(fmt)
+    logging.basicConfig(filename='mutual_information.log', level=logging.DEBUG,
+                        format=fmt)
+
     msg = 'Runs the computations related to zMIc'
     args_helper = argparse.ArgumentDefaultsHelpFormatter
     argparser = argparse.ArgumentParser(description=msg,

@@ -172,10 +172,10 @@ class modeller_caller(object):
         return self.outputs
 
 if __name__ == "__main__":
-    logging.basicConfig(filename='modeller_caller.log', level=logging.DEBUG)
     fmt = """%(asctime)s - %(filename)s - %(funcName)s - %(levelname)s
      - %(message)s"""
-    formatter = logging.Formatter(fmt)
+    logging.basicConfig(filename='modeller_caller.log', level=logging.DEBUG,
+                        format=fmt)
 
     msg = 'Creates models of the sequences'
     args_helper = argparse.ArgumentDefaultsHelpFormatter
@@ -198,5 +198,3 @@ if __name__ == "__main__":
         modeler.convert_ali(args.fasta, args.pir)
 
     modeler.modelize(args.pir, args.seq, args.models)
-    logging.info("Ended program")
-    exit(0)

@@ -137,11 +137,11 @@ def main(file, atom, CAd=15, CBd=12, mind=6):
     return(dist_matrix, cont_matrix)
 
 if __name__ == "__main__":
-
-    logging.basicConfig(filename='contact_map.log', level=logging.DEBUG)
     fmt = """%(asctime)s - %(filename)s - %(funcName)s - %(levelname)s
      - %(message)s"""
-    formatter = logging.Formatter(fmt)
+    logging.basicConfig(filename='contact_map.log', level=logging.DEBUG,
+                        format=fmt)
+
     msg = 'A module that calculates distance map'
     args_helper = argparse.ArgumentDefaultsHelpFormatter
     argparser = argparse.ArgumentParser(description=msg,

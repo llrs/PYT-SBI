@@ -53,7 +53,9 @@ def run_BLAST(query, blast_type, db, size):
 
 def analyze_blast_result(blast_out, filt=True):
     """Classify the result of blast."""
+
     logging.info("Analysing the result of blast %s.", blast_out.query_id)
+
     sq = blast_out.query_length
     id_set = []
     genere_set = set()
@@ -85,7 +87,9 @@ def analyze_blast_result(blast_out, filt=True):
 
 def retrive_sequence(id_seqs):
     """Generator downloading sequences from Entrez."""
+
     logging.info("Downloading sequences from Entrez.")
+
     for id_seq in id_seqs:
         logging.debug("Downloading sequence {}.".format(id_seq))
         handle = Entrez.efetch(db="protein", id=id_seq, rettype="fasta",
@@ -95,13 +99,17 @@ def retrive_sequence(id_seqs):
 
 def filter_ids(ids, key):
     """Extract all the values of a shared key from a list."""
+
     logging.info("Extracting ids for %s.", key)
+
     return map(lambda x: x[key], ids)
 
 
 def local_blast(query, blast_type, db, remote=True, **kwargs):
     """Function to run with the local blast program"""
+
     logging.info("Running blast locally with {} and {}".format(query, db))
+
     if remote:
         blast_cline = NcbiblastpCommandline(query=query, db=db,
                                             remote=True, out="blast.out",
@@ -119,6 +127,10 @@ def local_blast(query, blast_type, db, remote=True, **kwargs):
 
 
 if __name__ == "__main__":
+    fmt = """%(asctime)s - %(filename)s - %(funcName)s - %(levelname)s
+     - %(message)s"""
+    logging.basicConfig(filename='blast.log', level=logging.DEBUG,
+                        format=fmt)
     msg = 'Runs blast online.'
     args_helper = argparse.ArgumentDefaultsHelpFormatter
     argparser = argparse.ArgumentParser(description=msg,
@@ -134,7 +146,7 @@ if __name__ == "__main__":
                                     "tblastn", "tblastx"])
     choices_db = ["nr", "pdb", "swissprot", "refseq_protein", "pat",
                   "env_nr", "tsa_nr"]
-    argparser.add_argument("db", 
+    argparser.add_argument("db",
                            help="Set the database to search on.",
                            choices=choices_db,
                            default="nr")
@@ -147,7 +159,7 @@ if __name__ == "__main__":
                            action='store_false',
                            default=True)
     argparser.add_argument("-l",
-                           help="""If present do a local blast on the db 
+                           help="""If present do a local blast on the db
                            path""",
                            action="store_true", default=False)
 
