@@ -117,7 +117,7 @@ if __name__ == '__main__':
     for cutoff in np.linspace(0.0, 3.0, num=60):
         cutoff_list.append(cutoff)
         tmatrix = mut.get_level_matrix(zMIc_matrix, cutoff)
-        hits = matrix_hits(tmatrix)
+        hits = mut.matrix_hits(tmatrix)
         hit_list.append(hits)
         cm_residue_pairs = mut.retrieve_residue_positions(tmatrix, gapped_list,
                                                           minlist + maxlist)

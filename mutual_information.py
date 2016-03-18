@@ -14,7 +14,6 @@ import copy
 import math
 import logging
 
-import matplotlib.pyplot as plt
 
 # Biopython modules
 from Bio import AlignIO
@@ -24,13 +23,11 @@ import plots
 
 
 def prune(aln, listcol):
-    """
-    Removes columns from the multiple sequence alignment (MSA).
-    
+    """Removes columns from the multiple sequence alignment (MSA).
+
     aln: MultipleSeqAlignment object
     list: list of indexes of columns of aln
-    It removes the columns listed in listcol from aln.
-    """
+    It removes the columns listed in listcol from aln."""
     logging.debug("Pruning alignment.")
     listcol = sorted(listcol)
     for i in range(len(listcol)):
@@ -39,14 +36,12 @@ def prune(aln, listcol):
 
 
 def prune_id_gaps(aln, identifier):
-    """
-    Removes columns which have gaps in a specific record.
-    
+    """Removes columns which have gaps in a specific record.
+
     aln: MultipleSeqAlignment object
     identifer: string of the record's identifier
     It removes the columns of aln which have gaps in the record
-    labeled with identifier.
-    """
+    labeled with identifier."""
     logging.debug("Pruning gaps by id.")
     for i in range(len(aln)):
         if aln[i].id == identifier:
@@ -71,11 +66,11 @@ def get_all_gaps(aln):
 
 
 def get_level_matrix(matrix, level):
-    """Returns a binary matrix with positions exceeding a threshold
-    
+    """Returns a binary matrix with positions exceeding a threshold.
+
     matrix = numpy array object
     level = floating number
-    The matrix it returns has 1 in the positions where matrix 
+    The matrix it returns has 1 in the positions where matrix
     has values above level and 0 elsewhere."""
     logging.info("Selecting the amino acids contacts.")
     (n1, n2) = matrix.shape
@@ -93,7 +88,7 @@ def get_level_matrix(matrix, level):
 
 def column_frequencies(aln, col):
     """ Computes the residue frequencies of an MSA column.
-    
+
     aln: MultipleSeqAlignment object
     col: integer index of a column
     It returns a dictionary with the frequency (value) for each residue
@@ -113,8 +108,8 @@ def column_frequencies(aln, col):
 
 
 def joint_column_frequencies(aln, col1, col2):
-    """Computes the joint frequencies of pairs of MSA columns. 
-    
+    """Computes the joint frequencies of pairs of MSA columns.
+
     aln: MultipleSeqAlignment object
     col1, col2: integer indexes of columns
     It returns a dictionary with the joint frequency (value) for each
@@ -141,13 +136,11 @@ def joint_column_frequencies(aln, col1, col2):
 
 
 def entropy(aln, col, base):
-    """
-    Computes the entropy of an MSA column.
-    
+    """Computes the entropy of an MSA column.
+
     aln: MultipleSeqAlignment object
     col: integer index of a column
-    It returns the entropy for column col in aln.
-    """
+    It returns the entropy for column col in aln."""
     logging.info("Calculating the entropy at column {}".format(col))
     freq = column_frequencies(aln, col)
     entropy = 0
@@ -158,14 +151,12 @@ def entropy(aln, col, base):
 
 
 def joint_entropy(aln, col1, col2, base):
-    """
-    Computes the joint entropy of a pair of MSA columns.
-    
+    """Computes the joint entropy of a pair of MSA columns.
+
     aln: MultipleSeqAlignment object
     col1, col2: integer indexes of columns
     base:  base of the logarithm
-    It returns the joint entropy for col1 and col2 in aln.
-    """
+    It returns the joint entropy for col1 and col2 in aln."""
     logging.info("Calculates joint entropy of {} and {}".format(col1, col2))
     joint_freq = joint_column_frequencies(aln, col1, col2)
     jentropy = 0
@@ -176,15 +167,13 @@ def joint_entropy(aln, col1, col2, base):
 
 
 def get_extreme_columns(aln, entmin, entmax, base):
-    """
-    Gets columns with extreme entropy values.
-    
+    """Gets columns with extreme entropy values.
+
     aln: MultipleSeqAlignment object
     entmin, entmax: min (resp. max) entropy thresholds
     base: base of the logarithm
-    It returns a list of column indexes with entropy below (resp. above) 
-    the thresholds
-    """
+    It returns a list of column indexes with entropy below (resp. above)
+    the thresholds"""
     msg_log = "Calculating the columns with entropy below the threshold."
     logging.info(msg_log)
     minlist = []
@@ -198,13 +187,11 @@ def get_extreme_columns(aln, entmin, entmax, base):
 
 
 def mutual_info(aln, col1, col2, base=20):
-    """
-    Gives the mutual information (MI) of a pair of MSA columns.
+    """Gives the mutual information (MI) of a pair of MSA columns.
 
     aln: MultipleSeqAlignment object
     col1, col2: integer indexes of columns
-    base:  base of the logarithm
-    """
+    base:  base of the logarithm"""
     msg_log = "Calculates the mutual information of {} and {} columns"
     logging.info(msg_log.format(col1, col2))
     entropy1 = entropy(aln, col1, base)
@@ -213,15 +200,13 @@ def mutual_info(aln, col1, col2, base=20):
 
 
 def mutual_info_matrix(aln, base=20):
-    """
-    Returns the mutual information (MI) matrix of an MSA.
-    
+    """Returns the mutual information (MI) matrix of an MSA.
+
     aln: MultipleSeqAlignment object
     base: base of the logarithm
     It returns a square matrix of size len(aln) with MI
     values for each pair of positions in the MultipleSeqAlignment
-    object aln
-    """
+    object aln"""
     msg_log = "Calculates the matrix of the mutual information"
     logging.info(msg_log)
     n = aln.get_alignment_length()
@@ -248,11 +233,11 @@ def matrix_hits(binary_matrix):
 
 
 def standardise_matrix(mat):
-    """Translates the values of matrix into Z-scores. 
-    
+    """Translates the values of matrix into Z-scores.
+
     mat: numpy array of floats
     It returns a matrix with Z-score values of mat, using the mean and
-    standard deviation estimators over all the entries of mat, excluding 
+    standard deviation estimators over all the entries of mat, excluding
     the values in the diagonal."""
     logging.info("Standardising the MI with Z-score.")
     myarray = []
@@ -275,7 +260,7 @@ def standardise_matrix(mat):
 
 def CPS(aln, col1, col2, base=20):
     """Computes the CPS of a pair of columns in an MSA.
-    
+
     aln: MultipleSeqAlignment object
     col1, col2: integer indexes of columns
     base:  base of the logarithm
@@ -294,7 +279,8 @@ def CPS(aln, col1, col2, base=20):
 
 def NCPS_matrix(aln, base=20):
     """Computes the NCPS matrix of a MSA.
-	aln: MultipleSeqAlignment object
+
+    aln: MultipleSeqAlignment object
     base:  base of the logarithm
     It returns the matrix of pairwise normalised co-evolutionary
     pattern similarities of pairs of columns in aln"""
@@ -320,7 +306,7 @@ def NCPS_matrix(aln, base=20):
 
 
 def mutual_info_c(aln):
-    """It returns the MIc and its standardised version from aln"""
+    """It returns the MIc and its standardised version from aln."""
     logging.info("Calculating the MIc and standard MI.")
     mic = mutual_info_matrix(aln) - NCPS_matrix(aln)
     return (mic, standardise_matrix(mic))
@@ -328,12 +314,12 @@ def mutual_info_c(aln):
 
 def reconstruct_position(pos, deleted_pos):
     """
-    Computes the prior position of one column in an MSA. 
-    
+    Computes the prior position of one column in an MSA.
+
     pos: index of current position in an MSA
     deleted_positions: list with column indexes that were removed
     It returns the position of a column in an MSA that has undergone
-    deletion of several columns; the list deleted_pos contains the 
+    deletion of several columns; the list deleted_pos contains the
     indexes of the columns that have been deleted, prior to deletion.
     """
     logging.info("Reconstructing original positions of the matrix.")
@@ -350,12 +336,12 @@ def reconstruct_position(pos, deleted_pos):
 def retrieve_residue_positions(binary_matrix, gap_list, extreme_list):
     """
     Computes the prior indexes of column pairs.
-    
+
     pos: index of current position in an MSA
     gap_list, extreme_list: lists of indexes of column that were removed
-    It returns the indexes of the column pairs with value =1 in binary 
-    matrix, in an MSA that has undergone deletion of several columns; 
-    the lists gap_list and extreme_list contains the indexes of the 
+    It returns the indexes of the column pairs with value =1 in binary
+    matrix, in an MSA that has undergone deletion of several columns;
+    the lists gap_list and extreme_list contains the indexes of the
     columns that were deleted, before deletion.
     """
     logging.info("Retrive the original coordinates of the matrix.")
@@ -412,9 +398,9 @@ if __name__ == "__main__":
                            entropy and mutual information computations.""",
                            type=int,
                            default=20)
-    argparser.add_argument("-g", help="""If present, then prune those 
+    argparser.add_argument("-g", help="""If present, then prune those
                            columns of the MSA which have at least one gap.""",
-                           action='store_true', 
+                           action='store_true',
                            default=False)
     argparser.add_argument("-low",
                            help="""Threshold of mininum entropy allowed
@@ -423,7 +409,7 @@ if __name__ == "__main__":
                            type=float,
                            default=0.3)
     argparser.add_argument("-high",
-                           help="""Threshold of maximum entropy allowed 
+                           help="""Threshold of maximum entropy allowed
                            for each column in a MSA. Columns above this
                            threshold are pruned.""",
                            type=float,
@@ -431,14 +417,15 @@ if __name__ == "__main__":
     args = argparser.parse_args()
     # Read MSA
     alignment = AlignIO.read(args.i, "clustal")
-    # Prepare the alignment for MIc computations: prune high and low entropy columns
+    # Prepare the alignment for MIc computations:
+    # prune high and low entropy columns
     edited = prune_id_gaps(alignment, args.id)
     gapped_list = []
     if args.g:
         gapped_list = get_all_gaps(edited)
     edited = prune(edited, gapped_list)
     (minlist, maxlist) = get_extreme_columns(edited, args.low, args.high,
-                                            args.b)
+                                             args.b)
     edited = prune(edited, minlist+maxlist)
     # compute MI, NCPS, MIc, Z-score MIc + its associated level matrix
     MI_matrix = mutual_info_matrix(edited, args.b)
@@ -446,11 +433,15 @@ if __name__ == "__main__":
     MIc_matrix = MI_matrix - ncps_array
     zMIc_matrix = standardise_matrix(MIc_matrix)
     # plot MIc Z-scores and its associated level matrix
-    plots.plot_matrix_heatmap(zMIc_matrix, "zMIc")
+    title_zmic = 'zMic of the file {}'.format(args.i)
+    plots.plot_heatmap(zMIc_matrix, args.i, title_zmic, args.low)
     tmatrix = get_level_matrix(zMIc_matrix, args.L)
-    plots.plot_matrix_binary(tmatrix, "zMIc>{}".format(args.L))
+    title_zmic_b = "zMic contacts  with L>{} of the file {}".format(args.L,
+                                                                    args.i)
+    plots.plot_matrix_binary(tmatrix, args.i, title_zmic_b, args.L)
     # Retrieve CM residue pairs in their original coordinates
-    cm_residue_pairs = retrieve_residue_positions(tmatrix, gapped_list,minlist+maxlist)
+    cm_residue_pairs = retrieve_residue_positions(tmatrix, gapped_list,
+                                                  minlist + maxlist)
     fd = open(args.o, "w")
     for residue_pair in sorted(cm_residue_pairs):
         fd.write("%d %d\n" % residue_pair)

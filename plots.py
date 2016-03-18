@@ -37,25 +37,14 @@ def plot_contacts(contacts, name_file, title, option):
                 format="png")
 
 
-def plot_matrix_heatmap(matrix, keyword):
-    """Plots a matrix of values as a heatmap"""
-    logging.info("Plotting the heatmap for %s", keyword)
-    imgplot = plt.imshow(matrix, cmap='Blues', interpolation='none')
-    plt.title('{} heatmap'.format(keyword))
-    legend = plt.colorbar(imgplot)
-    legend.set_label("{}".format(keyword))
-    plt.savefig('{}_heatmap.png'.format(keyword), format="png")
-    fig = plt.figure()
-    fig.show()
-
-
-def plot_matrix_binary(matrix, keyword):
+def plot_matrix_binary(matrix, name_file, title, option):
     """Plots a matrix with binary values: black and white"""
-    imgplot=plt.imshow(matrix, cmap = 'Greys', interpolation='none')
-    plt.title('{}'.format(keyword))
-    plt.savefig('{}_heatmap.png'.format(keyword), format="png")
+    imgplot = plt.imshow(matrix, cmap='Greys', interpolation='none')
+    plt.title(title)
+    plt.savefig('contact_map_{}_{}.png'.format(name_file, option),
+                format="png")
     fig = plt.figure()
-    fig.show()
+#     fig.show()
 
 
 def plot_twin_curves(cutoff_list, hit_list, precision_list):

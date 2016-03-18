@@ -183,11 +183,13 @@ if __name__ == '__main__':
         # plot distance, contact, MIc Z-scores and its associated level matrix
         title_dist = 'Distances of the file {}'.format(args.i)
         plots.plot_heatmap(dist_matrix, args.i, title_dist, args.a)
-        plots.plot_matrix_binary(cont_matrix, "Contact {}".format(args.a))
+        title_binary = 'Distance contacts of the file {}'.format(args.i)
+        plots.plot_matrix_binary(cont_matrix, args.i, title_binary, args.a)
         title_zmic = 'zMic of the file {}'.format(args.i)
         plots.plot_heatmap(zMIc_matrix, args.i, title_zmic, args.low)
         tmatrix = mut.get_level_matrix(zMIc_matrix, 2)
-        plots.plot_matrix_binary(tmatrix, "zMIc with L>2")
+        title_zmic_b = "zMic contacts  with L>2 of the file".format(args.i)
+        plots.plot_matrix_binary(tmatrix, args.i, title_zmic_b, args.a)
         # plot level-precision analysis and CM-distance analysis
         plots.precision_analysis(zMIc_matrix, cont_matrix, gapped_list,
                                  minlist, maxlist, 0.0, 3.0, 60)
