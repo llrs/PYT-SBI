@@ -129,11 +129,11 @@ def main(file, atom, CAd=15, CBd=12, mind=6):
     name_heatmap = plots.plot_heatmap(dist_matrix, name_f, title_dist, atom)
     logging.info("Heatmap %s created", name_heatmap)
     cont_matrix = contact_map(dist_matrix, atom, dist)
-    title_cont = 'Contacts of the file {}'.format(name_f)
-    name_bin = plots.plot_matrix_binary(cont_matrix, name_f, title_cont, atom)
+    title_bin = 'Distance contacts of the file {}'.format(name_f)
+    name_bin = plots.plot_matrix_binary(cont_matrix, name_f, title_bin, atom)
     logging.info("Contact map %s created", name_bin)
     logging.captureWarnings(False)
-    
+
     return(dist_matrix, cont_matrix)
 
 if __name__ == "__main__":

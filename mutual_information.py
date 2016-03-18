@@ -28,7 +28,9 @@ def prune(aln, listcol):
     aln: MultipleSeqAlignment object
     list: list of indexes of columns of aln
     It removes the columns listed in listcol from aln."""
+
     logging.debug("Pruning alignment.")
+
     listcol = sorted(listcol)
     for i in range(len(listcol)):
         aln = aln[:, : listcol[i]-i] + aln[:, listcol[i]-i+1:]
@@ -42,7 +44,9 @@ def prune_id_gaps(aln, identifier):
     identifer: string of the record's identifier
     It removes the columns of aln which have gaps in the record
     labeled with identifier."""
+
     logging.debug("Pruning gaps by id.")
+
     for i in range(len(aln)):
         if aln[i].id == identifier:
             row = i
@@ -55,7 +59,9 @@ def prune_id_gaps(aln, identifier):
 
 def get_all_gaps(aln):
     """Gets columns with at least one gap."""
+
     logging.info("Identifying positions with gaps.")
+
     listcol = []
     for j in range(aln.get_alignment_length()):
         for i in range(len(aln)):
@@ -72,7 +78,9 @@ def get_level_matrix(matrix, level):
     level = floating number
     The matrix it returns has 1 in the positions where matrix
     has values above level and 0 elsewhere."""
+
     logging.info("Selecting the amino acids contacts.")
+
     (n1, n2) = matrix.shape
     out_matrix = np.empty([n1, n2], dtype=float, order='F')
     for i in range(n1):
@@ -93,7 +101,9 @@ def column_frequencies(aln, col):
     col: integer index of a column
     It returns a dictionary with the frequency (value) for each residue
     in column col of the MultipleSeqAlignment aln."""
+
     logging.info("Calculating the frecuency for the alignment.")
+
     alphabet = set('ACDEFGHIKLMNPQRSTVWY-')
     freq = dict.fromkeys(alphabet, 0)
     column = aln[:, col]
@@ -115,8 +125,10 @@ def joint_column_frequencies(aln, col1, col2):
     It returns a dictionary with the joint frequency (value) for each
     sorted tuple (key) of residues in columns indexed col1 and col2
     of the MultipleSeqAlignment aln."""
+
     msg_log = "Calculates the joint frequency of columns {} and {}"
     logging.info(msg_log.format(col1, col2))
+
     alphabet = set('ACDEFGHIKLMNPQRSTVWY-')
     index = set()
     for i in alphabet:
@@ -141,7 +153,9 @@ def entropy(aln, col, base):
     aln: MultipleSeqAlignment object
     col: integer index of a column
     It returns the entropy for column col in aln."""
+
     logging.info("Calculating the entropy at column {}".format(col))
+
     freq = column_frequencies(aln, col)
     entropy = 0
     for key in freq:
@@ -174,8 +188,10 @@ def get_extreme_columns(aln, entmin, entmax, base):
     base: base of the logarithm
     It returns a list of column indexes with entropy below (resp. above)
     the thresholds"""
+
     msg_log = "Calculating the columns with entropy below the threshold."
     logging.info(msg_log)
+
     minlist = []
     maxlist = []
     for i in range(aln.get_alignment_length()):
@@ -192,8 +208,10 @@ def mutual_info(aln, col1, col2, base=20):
     aln: MultipleSeqAlignment object
     col1, col2: integer indexes of columns
     base:  base of the logarithm"""
+
     msg_log = "Calculates the mutual information of {} and {} columns"
     logging.info(msg_log.format(col1, col2))
+
     entropy1 = entropy(aln, col1, base)
     entropy2 = entropy(aln, col2, base)
     return entropy1 + entropy2 - joint_entropy(aln, col1, col2, base)
@@ -207,8 +225,10 @@ def mutual_info_matrix(aln, base=20):
     It returns a square matrix of size len(aln) with MI
     values for each pair of positions in the MultipleSeqAlignment
     object aln"""
+
     msg_log = "Calculates the matrix of the mutual information"
     logging.info(msg_log)
+
     n = aln.get_alignment_length()
     matrix = np.empty([n, n], dtype=float, order='F')
     for j in range(n):
@@ -222,7 +242,9 @@ def mutual_info_matrix(aln, base=20):
 
 def matrix_hits(binary_matrix):
     """Gets the number of cells with value 1 in matrix."""
+
     logging.info("Counting how many contacts are predicted.")
+
     count = 0
     (n1, n2) = binary_matrix.shape
     for i in range(n1):
@@ -239,7 +261,9 @@ def standardise_matrix(mat):
     It returns a matrix with Z-score values of mat, using the mean and
     standard deviation estimators over all the entries of mat, excluding
     the values in the diagonal."""
+
     logging.info("Standardising the MI with Z-score.")
+
     myarray = []
     (n1, n2) = mat.shape
     for i in range(n1):
@@ -266,7 +290,9 @@ def CPS(aln, col1, col2, base=20):
     base:  base of the logarithm
     It returns the pairwise co-evolutionary pattern similarity
     for a pair of columns col1 and col2 of aln"""
+
     logging.info("Calculating the co-evolutionary pattern similarity.")
+
     n = aln.get_alignment_length()
     m = mutual_info_matrix(aln, base)
     cps = 0
@@ -284,7 +310,9 @@ def NCPS_matrix(aln, base=20):
     base:  base of the logarithm
     It returns the matrix of pairwise normalised co-evolutionary
     pattern similarities of pairs of columns in aln"""
+
     logging.info("Normalizing co-evolutionary pattern similarities")
+
     n = aln.get_alignment_length()
     m = mutual_info_matrix(aln, base)
     cps_matrix = np.empty([n, n], dtype=float, order='F')
@@ -307,22 +335,24 @@ def NCPS_matrix(aln, base=20):
 
 def mutual_info_c(aln):
     """It returns the MIc and its standardised version from aln."""
+
     logging.info("Calculating the MIc and standard MI.")
+
     mic = mutual_info_matrix(aln) - NCPS_matrix(aln)
     return (mic, standardise_matrix(mic))
 
 
 def reconstruct_position(pos, deleted_pos):
-    """
-    Computes the prior position of one column in an MSA.
+    """Computes the prior position of one column in an MSA.
 
     pos: index of current position in an MSA
     deleted_positions: list with column indexes that were removed
     It returns the position of a column in an MSA that has undergone
     deletion of several columns; the list deleted_pos contains the
-    indexes of the columns that have been deleted, prior to deletion.
-    """
+    indexes of the columns that have been deleted, prior to deletion."""
+
     logging.info("Reconstructing original positions of the matrix.")
+
     diff = 0
     deleted_pos = sorted(deleted_pos)
     for i in range(len(deleted_pos)):
@@ -334,17 +364,17 @@ def reconstruct_position(pos, deleted_pos):
 
 
 def retrieve_residue_positions(binary_matrix, gap_list, extreme_list):
-    """
-    Computes the prior indexes of column pairs.
+    """Computes the prior indexes of column pairs.
 
     pos: index of current position in an MSA
     gap_list, extreme_list: lists of indexes of column that were removed
     It returns the indexes of the column pairs with value =1 in binary
     matrix, in an MSA that has undergone deletion of several columns;
     the lists gap_list and extreme_list contains the indexes of the
-    columns that were deleted, before deletion.
-    """
-    logging.info("Retrive the original coordinates of the matrix.")
+    columns that were deleted, before deletion."""
+
+    logging.info("Retrieve the original coordinates of the matrix.")
+
     set_pairs = set()
     (n1, n2) = binary_matrix.shape
     for i in range(n1):
@@ -362,7 +392,9 @@ def retrieve_all_positions(matrix, gap_list, extreme_list):
     """Retrieves a dictionary with keys given by the original coordinates
     of the set of pairs of residues corresponding to all spots in matrix
     above the diagonal, and values corresponding to the values in matrix."""
-    logging.info("Retriving all positions with original coordinates.")
+
+    logging.info("Retrieving all positions with original coordinates.")
+
     dict_pairs = {}
     (n1, n2) = matrix.shape
     for i in range(n1):
@@ -378,6 +410,10 @@ def retrieve_all_positions(matrix, gap_list, extreme_list):
 
 
 if __name__ == "__main__":
+    logging.basicConfig(filename='mutual_information.log', level=logging.DEBUG)
+    fmt = """%(asctime)s - %(filename)s - %(funcName)s - %(levelname)s
+     - %(message)s"""
+    formatter = logging.Formatter(fmt)
     msg = 'Runs the computations related to zMIc'
     args_helper = argparse.ArgumentDefaultsHelpFormatter
     argparser = argparse.ArgumentParser(description=msg,
@@ -447,3 +483,6 @@ if __name__ == "__main__":
     for residue_pair in sorted(cm_residue_pairs):
         fd.write("%d %d\n" % residue_pair)
     fd.close()
+
+    logging.info("Ended program")
+    exit(0)

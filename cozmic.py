@@ -153,14 +153,14 @@ if __name__ == '__main__':
             try:
                 pdbpath = plots.pdb_download(args.input, os.getcwd())
             except:
-                raise FileExistsError("make sure your query format is correct")
+                raise FileExistsError("Make sure your query format is correct")
         structure = parser.get_structure("cozmic_pdb_query", pdbpath)
         residues = cm.filter_residues(structure)
         s = ""
         for residue in residues:
             s += SCOPData.protein_letters_3to1.get(residue.get_resname(), 'X')
         seq = Seq(s, generic_protein)
-        sys.stderr.write("Protein sequence:%s\n" % seq)
+#         sys.stderr.write("Protein sequence:%s\n" % seq)
         # Compute distances and contact between residues
         dist_matrix = cm.calc_dist_matrix(residues, args.a)
         cont_matrix = cm.contact_map(dist_matrix, args.a)
@@ -200,24 +200,44 @@ if __name__ == '__main__':
         ncps_array = mut.NCPS_matrix(edited, args.b)
         MIc_matrix = MI_matrix - ncps_array
         zMIc_matrix = mut.standardise_matrix(MIc_matrix)
+
         # plot distance, contact, MIc Z-scores and its associated level matrix
-        title_dist = 'Distances of the file {}'.format(args.input)
+        title_dist = 'Contacts of the file {}'.format(args.input)
         plots.plot_heatmap(dist_matrix, args.input, title_dist, args.a)
-        title_binary = 'Distance contacts of the file {}'.format(args.input)
+
+        # Plot contacts based on distance
+        title_binary = 'Predicted contacts of the file {}'.format(args.input)
         plots.plot_matrix_binary(cont_matrix, args.input, title_binary, args.a)
-        title_zmic = 'zMic of the file {}'.format(args.input)
+
+        # Plots zMIc
+        title_zmic = 'zMic values of the file {}'.format(args.input)
         plots.plot_heatmap(zMIc_matrix, args.input, title_zmic, args.low)
         tmatrix = mut.get_level_matrix(zMIc_matrix, 2)
-        title_zmic_b = "zMic contacts  with L>2 of the file".format(args.input)
-        plots.plot_matrix_binary(tmatrix, args.input, title_zmic_b, args.a)
-        # plot level-precision analysis and CM-distance analysis
+
+        # Calculates the default predicted contacts and store them in the file
         mm = minlist + maxlist
-        (cutoff_list, hit_list, precision_list) = plots.precision_analysis(
+        std_cont = mut.retrieve_residue_positions(tmatrix, gapped_list, mm)
+        name_out = "predicted_contacts_{}.out"
+        with open(name_out.format(args.input), "w") as out_f:
+            out_f.write(repr(std_cont))
+
+        # Plots the default contacts
+        title_zmic_b = "zMic predictions  with L>2 of the file".format(args.input)
+        plots.plot_matrix_binary(tmatrix, args.input, title_zmic_b, args.a)
+
+        # plot level-precision analysis and CM-distance analysis
+        cutoff_list, hit_list, precision_list = plots.precision_analysis(
         zMIc_matrix, cont_matrix, gapped_list, mm, 0.0, 3.0, 60)
         plots.plot_twin_curves(cutoff_list, hit_list, precision_list,
                                args.input)
-        # Leo's function here!
+
+        pairs = mut.retrieve_all_positions(zMIc_matrix, gapped_list, mm)
+        list_dist, list_zMIc = plots.distances_zMIcs(pairs, dist_matrix)
+        print(list_dist)
+        print(list_zMIc)
+        plots.plot_distance_zMIc(list_dist, list_zMIc, args.input)
     elif args.pir:
+
         env = mc.env_mod()  # Some variables needed for the modeller
         modeler = mc.modeller_caller(env)
         # Convert the fasta alignment in pir format

@@ -1,6 +1,7 @@
 #!/usr/bin/python3
+# encoding: utf-8
 """
-Deals with plots and graphical outputs.
+Deals with plots and graphical outputs, some calculus
 Created on Mar 7, 2016
 @author: Leo, Lluís, Ferran
 """
@@ -22,10 +23,11 @@ def plot_heatmap(distances, name_file, title, option):
 
     logging.info("Plotting the distance map for {}".format(name_file))
 
-    plt.imshow(distances, interpolation='none')
-    heatmap = plt.pcolormesh(distances)
-    plt.title(title)
-    legend = plt.colorbar(heatmap)
+    fig_h = plt.figure()
+    ax = fig_h.add_subplot(111)
+    fig_h.suptitle(title)
+    heatmap = ax.pcolormesh(distances)
+    legend = fig_h.colorbar(heatmap)
     legend.set_label("Angstroms")
     name_out = 'heatmap_{}_{}.png'.format(name_file, option)
     plt.savefig(name_out, format="png")
@@ -37,9 +39,9 @@ def plot_matrix_binary(matrix, name_file, title, option):
 
     logging.info("Plotting the contact map for {}".format(name_file))
 
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    fig.suptitle(title)
+    fig_b = plt.figure()
+    ax = fig_b.add_subplot(111)
+    fig_b.suptitle(title)
     imgplot = ax.imshow(matrix, cmap='Greys', interpolation='none')
     name_out = 'contact_map_{}_{}.png'.format(name_file, option)
     plt.savefig(name_out, format="png")
@@ -90,7 +92,7 @@ def precision_analysis(zMIc_m, cont_m, gapped_list, mm, l=0.0, h=3.0, num=60):
         hit_list.append(hits)
         cm_residue_pairs = mut.retrieve_residue_positions(tmatrix, gapped_list,
                                                           mm)
-        print(cm_residue_pairs)
+#         print(cm_residue_pairs)
         count = 0
         for rp in cm_residue_pairs:
             count += cont_m[rp[0], rp[1]]
@@ -117,5 +119,42 @@ def pdb_download(code, path=None):
         file = pdbl.retrieve_pdb_file(code, pdir=path)
     logging.captureWarnings(False)
     return file
+
+
+def distances_zMIcs(dict_pairs, dist_matrix):
+    """Relates the distance_matrix with te zMIc matrix."""
+
+    logging.info("Relating distances with zMIc values.")
+    print(dict_pairs)
+    list_coor = dict_pairs.keys()
+    list_zMIc = dict_pairs.values()
+    list_dist = []
+#     for i in range(len(list_coor)):
+#         list_dist.append(dist_matrix[list_coor[i][0]][list_coor[i][1]])
+    for element in list_coor:
+        list_dist.append(dist_matrix[element[0]][element[1]])
+    assert len(list_dist) == len(list_zMIc)
+    return (list_dist, list_zMIc)
+
+
+def plot_distance_zMIc(list_dist, list_zMIc, name_file):
+    """Plots the zMIc values of residues pairs against the distance."""
+
+    msg = """Plotting the zMIc values of residues pairs facing the distance
+    between them."""
+    logging.info(msg)
+
+    fig = plt.figure()
+    fig_title = 'zMIc  VS. distance between residues pairs of {}'
+    fig.suptitle(fig_title.format(name_file))
+    assert len(list_dist) == len(list_zMIc)
+    plt.scatter(list_zMIc, list_dist, color='blue', s=5, edgecolor='none')
+    plt.xlabel('zMIc values (z-scores)', fontsize=16)
+    plt.ylabel('Distances (Angstroms)', fontsize=16)
+    file_out = 'distance_zMIc_{}.png'.format(name_file)
+    plt.savefig(file_out)
+    return file_out
+
 if __name__ == "__main__":
-    pass
+    print("""This module provides some functions used by several part of the
+    program.\nIt should not be run as an independent module.""")

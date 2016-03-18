@@ -36,8 +36,10 @@ def run_BLAST(query, blast_type, db, size):
     so only those sequence of different genus will be saved
 
     Returns a list of dictionaries with the id of the result of the blast"""
+
     logging.info("Starting a blast from {} on {} with {}.".format(
                                                         query, db, blast_type))
+
     if os.path.isfile(query):
         record = SeqIO.read(query, format="fasta")
         result_handle = NCBIWWW.qblast(blast_type, db, record.format("fasta"),
@@ -122,21 +124,31 @@ if __name__ == "__main__":
     argparser = argparse.ArgumentParser(description=msg,
                                         formatter_class=args_helper)
 
-    argparser.add_argument("input", help="Id of the sequence or file ")
-    argparser.add_argument("output_file", help="Output file")
-    argparser.add_argument("type", help="Type of blast to perform",
+    argparser.add_argument("input",
+                           help="Id of the sequence or file ")
+    argparser.add_argument("output_file",
+                           help="Output file")
+    argparser.add_argument("type",
+                           help="Type of blast to perform",
                            choices=["blastp", "blastn", "blast", "blastx",
                                     "tblastn", "tblastx"])
     choices_db = ["nr", "pdb", "swissprot", "refseq_protein", "pat",
                   "env_nr", "tsa_nr"]
-    argparser.add_argument("db", help="Set the database to search on.",
-                           choices=choices_db, default="nr")
-    argparser.add_argument("-s", help="Set the number hits you want",
-                           const=50, action='store_const')
-    argparser.add_argument("-f", help="If present don't filter by genus",
-                           action='store_false', default=True)
-    argparser.add_argument("-l", help="""
-    If present do a local blast on the db path""",
+    argparser.add_argument("db", 
+                           help="Set the database to search on.",
+                           choices=choices_db,
+                           default="nr")
+    argparser.add_argument("-s",
+                           help="Set the number hits you want",
+                           type=int,
+                           default=200)
+    argparser.add_argument("-f",
+                           help="If present don't filter by genus",
+                           action='store_false',
+                           default=True)
+    argparser.add_argument("-l",
+                           help="""If present do a local blast on the db 
+                           path""",
                            action="store_true", default=False)
 
     args = argparser.parse_args()

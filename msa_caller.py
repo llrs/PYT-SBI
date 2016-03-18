@@ -51,10 +51,16 @@ def call_msa_method(method, in_file, out_file, output_format=None):
     return(stdout)
 
 if __name__ == '__main__':
+    logging.basicConfig(filename='msa_caller.log', level=logging.DEBUG)
+    fmt = """%(asctime)s - %(filename)s - %(funcName)s - %(levelname)s
+     - %(message)s"""
+    formatter = logging.Formatter(fmt)
+
     msg = 'Carries out a MSA'
+    arg_helper = argparse.ArgumentDefaultsHelpFormatter
     programs_MSA = ["clustalw", "muscle", "t_coffee"]
     argparser = argparse.ArgumentParser(description=msg,
-                        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+                                        formatter_class=arg_helper)
     argparser.add_argument("file",
                            help="File with sequences to be aligned.")
     argparser.add_argument("-m",
@@ -64,3 +70,5 @@ if __name__ == '__main__':
     argparser.add_argument("-f", help="Output format.", default="fasta")
     args = argparser.parse_args()
     call_msa_method(args.m, args.file, args.o, args.f)
+    logging.info("Ended program")
+    exit(0)
