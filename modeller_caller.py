@@ -23,8 +23,10 @@ from Bio.PDB import PDBList
 
 
 # Code from https://salilab.org/archives/modeller_usage/2015/msg00043.html
-class ShutUp(object):
-    """Redirects the output of the stdout."""
+class _ShutUp(object):
+    """Redirects the output of the stdout.
+
+    This supres the modeller output when importing the module"""
     def __enter__(self):
         self._stdout = sys.stdout
         sys.stdout = open(os.devnull, 'w')
@@ -37,8 +39,8 @@ class ShutUp(object):
 class env_mod(modeller.environ):
     """Modified version to redirect the output and open it silently."""
     def __init__(self):
-        """Modify"""
-        with ShutUp():
+        """Modify with the class created"""
+        with _ShutUp():
             super(env_mod, self)
 
 env = env_mod()  # Some variables needed for the modeller
@@ -46,6 +48,9 @@ env = env_mod()  # Some variables needed for the modeller
 
 def pdb_download(code, path=None):
     """Downloads the structure of the pdb on a file.
+
+    cod is the pdb code of the structure
+    path is the localization where it will be downloaded
 
     Returns the file name where it is stored"""
     logging.info("Downloading pdb %s.", code)
@@ -73,8 +78,12 @@ class modeller_caller(object):
     def convert_ali(self, fasta, pir):
         """An alignment in fasta format is converted to Modeller/pir format.
 
+        fasta is a file with an alignment in fasta format
+        pir is the output name of the file with the alignment in pir format
+
         It downloads the pdb of the alignment to fetch the necessary data for
-        the pir format."""
+        the pir format.
+        """
         assert pir != "output.pir"  # Assumption
         logging.captureWarnings(True)
         aln = modeller.alignment(self.env)
