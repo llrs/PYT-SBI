@@ -17,6 +17,7 @@ from Bio.PDB.PDBParser import PDBParser
 from Bio.PDB.Polypeptide import PPBuilder
 from Bio.Alphabet import generic_protein
 from Bio.Seq import Seq
+from Bio import SeqIO
 
 # Non-standard modules
 import contact_map as cm
@@ -93,7 +94,10 @@ if __name__ == '__main__':
     fd.write(">target\n%s" % seq)
     fd.close()
     # call BLAST search: as of today the output is named "blast_record.fa"
-    blst.run_BLAST('temp.fa')
+    blast_result = blst.run_BLAST('temp.fa', "blastp", "swissprot", 1000)
+    ides = blst.analyze_blast_result(blast_result, args.f)
+    ids = list(blst.filter_ids(ides, "gi"))
+    SeqIO.write(blst.retrive_sequence(ids), "blast_record.fa", "fasta")
     # get the MSA from the blast_record
     msa.call_msa_method(args.m, "blast_record.fa", "aligned.aln",
                         find_executable(args.m))
@@ -130,4 +134,4 @@ if __name__ == '__main__':
                 pass
         precision_list.append(count/hits)
     # produce the plot
-    plots.plot_twin_curves(cutoff_list, hit_list, precision_list)
+    plots.plot_twin_curves(cutoff_list, hit_list, precision_list, args.file)

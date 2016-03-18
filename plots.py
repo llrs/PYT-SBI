@@ -24,21 +24,8 @@ def plot_heatmap(distances, name_file, title, option):
     plt.savefig('heatmap_{}_{}.png'.format(name_file, option),
                 format="png")
 
-
-def plot_contacts(contacts, name_file, title, option):
-    """Plots the contact map between residues."""
-    logging.info("Plotting the contact map for {}".format(name_file))
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    fig.suptitle(title)
-    ax.imshow(contacts, aspect='auto',
-              cmap=plt.cm.gray, interpolation='nearest')
-    plt.savefig("contact_map_{}_{}.png".format(name_file, option),
-                format="png")
-
-
 def plot_matrix_binary(matrix, name_file, title, option):
-    """Plots a matrix with binary values: black and white."""
+    """Plots the contact map between residues black means contact."""
     logging.info("Plotting the contact map for {}".format(name_file))
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -46,13 +33,10 @@ def plot_matrix_binary(matrix, name_file, title, option):
     imgplot = ax.imshow(matrix, cmap='Greys', interpolation='none')
     plt.savefig('contact_map_{}_{}.png'.format(name_file, option),
                 format="png")
-#     fig = plt.figure()
-#     fig.show()
 
 
-def plot_twin_curves(cutoff_list, hit_list, precision_list):
-    """Plots the cutoff_list x hit_list and cutoff_list x precision_list
-    curves in the same plot with two different yaxis labels."""
+def plot_twin_curves(cutoff_list, hit_list, precision_list, name_file):
+    """Plots the precision and the hits depending on the cutoff."""
     fig, ax1 = plt.subplots()
     ax1.plot(cutoff_list, hit_list, 'ob-')
     ax1.set_xlabel('Cutoff level L')
@@ -62,6 +46,8 @@ def plot_twin_curves(cutoff_list, hit_list, precision_list):
     ax2 = ax1.twinx()
     ax2.plot(cutoff_list, precision_list, 'or-')
     ax2.set_ylabel('Precision', color='r')
+    plt.savefig('cutoff_zMIc_{}.png'.format(name_file),
+                format="png")
     plt.show()
 
 
