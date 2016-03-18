@@ -32,7 +32,7 @@ import mutual_information as mut
 import msa_caller as msa
 import blast as blst
 import plots
-import modeller_caller as mc
+#import modeller_caller as mc
 
 # Entrez inputs
 Entrez.email = "ferran.muinos@gmail.com"
@@ -202,16 +202,16 @@ if __name__ == '__main__':
         zMIc_matrix = mut.standardise_matrix(MIc_matrix)
 
         # plot distance, contact, MIc Z-scores and its associated level matrix
-        title_dist = 'Contacts of the file {}'.format(args.input)
-        plots.plot_heatmap(dist_matrix, args.input, title_dist, args.a)
+        title_dist = 'Distance of the file {}'.format(args.input)
+        plots.plot_heatmap(dist_matrix, args.input+"_d", title_dist, args.a, "Angstroms")
 
         # Plot contacts based on distance
-        title_binary = 'Predicted contacts of the file {}'.format(args.input)
-        plots.plot_matrix_binary(cont_matrix, args.input, title_binary, args.a)
+        title_binary = 'Contacts of the file {}'.format(args.input)
+        plots.plot_matrix_binary(cont_matrix, args.input+"_c", title_binary, args.a)
 
         # Plots zMIc
         title_zmic = 'zMic values of the file {}'.format(args.input)
-        plots.plot_heatmap(zMIc_matrix, args.input, title_zmic, args.low)
+        plots.plot_heatmap(zMIc_matrix, args.input+"_z", title_zmic, args.low, "zMIc")
         tmatrix = mut.get_level_matrix(zMIc_matrix, 2)
 
         # Calculates the default predicted contacts and store them in the file
@@ -222,8 +222,8 @@ if __name__ == '__main__':
             out_f.write(repr(std_cont))
 
         # Plots the default contacts
-        title_zmic_b = "zMic predictions  with L>2 of the file".format(args.input)
-        plots.plot_matrix_binary(tmatrix, args.input, title_zmic_b, args.a)
+        title_zmic_b = "Predicted contacts with zMic > 2 of the file".format(args.input)
+        plots.plot_matrix_binary(tmatrix, args.input+"_p", title_zmic_b, args.a)
 
         # plot level-precision analysis and CM-distance analysis
         cutoff_list, hit_list, precision_list = plots.precision_analysis(
@@ -235,14 +235,14 @@ if __name__ == '__main__':
         list_dist, list_zMIc = plots.distances_zMIcs(pairs, dist_matrix)
         print(list_dist)
         print(list_zMIc)
-        plots.plot_distance_zMIc(list_dist, list_zMIc, args.input)
+        #plots.plot_distance_zMIc(list_dist, list_zMIc, args.input)
     elif args.pir:
-
-        env = mc.env_mod()  # Some variables needed for the modeller
-        modeler = mc.modeller_caller(env)
+        pass
+        #env = mc.env_mod()  # Some variables needed for the modeller
+        #modeler = mc.modeller_caller(env)
         # Convert the fasta alignment in pir format
-        if not args.fasta and not args.pir:
-            raise argparser.error("Required a fasta or a pir alignment")
-        elif args.fasta:
-            modeler.convert_ali(args.fasta, args.pir)
-        modeler.modelize(args.pir, args.seq, args.models)
+        #if not args.fasta and not args.pir:
+        #    raise argparser.error("Required a fasta or a pir alignment")
+        #elif args.fasta:
+        #    modeler.convert_ali(args.fasta, args.pir)
+        #modeler.modelize(args.pir, args.seq, args.models)

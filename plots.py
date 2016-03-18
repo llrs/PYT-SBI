@@ -17,18 +17,18 @@ from Bio.PDB import PDBList
 
 import mutual_information as mut
 
-
-def plot_heatmap(distances, name_file, title, option):
-    """Plots the distances between the residues."""
+def plot_heatmap(matrix, name_file, title, option, label):
+    """Plots a heatmap of a matrix."""
 
     logging.info("Plotting the distance map for {}".format(name_file))
 
-    fig_h = plt.figure()
-    ax = fig_h.add_subplot(111)
-    fig_h.suptitle(title)
-    heatmap = ax.pcolormesh(distances)
-    legend = fig_h.colorbar(heatmap)
-    legend.set_label("Angstroms")
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    fig.suptitle(title)
+    heatmap = plt.pcolormesh(matrix)
+    legend = plt.colorbar(heatmap)
+    legend.set_label(label)
+    imgplot = ax.imshow(matrix, interpolation='none')
     name_out = 'heatmap_{}_{}.png'.format(name_file, option)
     plt.savefig(name_out, format="png")
     return name_out
