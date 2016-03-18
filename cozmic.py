@@ -32,8 +32,8 @@ import mutual_information as mut
 import msa_caller as msa
 import blast as blst
 import plots
-import modeller_caller as mc
-from modeller import environ
+# import modeller_caller as mc
+# from modeller import environ
 
 # Entrez inputs
 Entrez.email = "ferran.muinos@gmail.com"
@@ -141,12 +141,14 @@ if __name__ == '__main__':
     fmt = """%(asctime)s - %(filename)s - %(funcName)s - %(levelname)s
       - %(message)s"""
     logging.basicConfig(filename='cozmic.log', level=int(100/(args.d*10)),
-                    format=fmt)
+                        format=fmt)
 
     print("You are currently running the program with: ", args)
     try:
         args.input
     except AttributeError:
+        from modeller import environ
+        import modeller_caller as mc
         env = environ()  # Some variables needed for the modeller
         modeler = mc.modeller_caller(env)
         # Convert the fasta alignment in pir format
@@ -214,7 +216,7 @@ if __name__ == '__main__':
                                                      args.high, args.b)
         mm = minlist + maxlist
         edited = mut.prune(edited, mm)
-#         print(len(edited), len(mm))
+
         # compute MI, NCPS, MIc, Z-score MIc + its associated level matrix
         MI_matrix = mut.mutual_info_matrix(edited, args.b)
         ncps_array = mut.NCPS_matrix(edited, args.b)
@@ -255,9 +257,4 @@ if __name__ == '__main__':
         plots.plot_twin_curves(cutoff_list, hit_list, precision_list,
                                args.input)
 
-        pairs = mut.retrieve_all_positions(zMIc_matrix, gapped_list, mm)
-        list_dist, list_zMIc = plots.distances_zMIcs(pairs, dist_matrix)
-#         print(list_dist)
-#         print(list_zMIc)
-        #plots.plot_distance_zMIc(list_dist, list_zMIc, args.input)
         logging.captureWarnings(False)

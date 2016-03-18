@@ -17,6 +17,7 @@ from Bio.PDB import PDBList
 
 import mutual_information as mut
 
+
 def plot_heatmap(matrix, name_file, title, option, label):
     """Plots a heatmap of a matrix."""
 
