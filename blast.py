@@ -169,10 +169,7 @@ if __name__ == "__main__":
 #     blast_result = local_blast(args.input, args.type, args.db)
     ides = analyze_blast_result(blast_result, args.f)
     ids = list(filter_ids(ides, "gi"))
-#     ides_pdb = list(filter_ids(ides, "pdb"))
-    print(len(ids))
     file_out = open(args.output_file, "w")
     logging.info("Saving the output file {}".format(file_out))
     SeqIO.write(retrive_sequence(ids), file_out, "fasta")
     file_out.close()
-    
