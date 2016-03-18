@@ -14,12 +14,12 @@ from Bio.Blast import NCBIWWW
 from Bio.Blast import NCBIXML
 from Bio import SeqIO
 from Bio import Entrez
-from Bio.PDB import PDBList
 from Bio.PDB.PDBParser import PDBParser
 from Bio.SeqUtils import seq1
 from Bio.Blast.Applications import NcbiblastpCommandline
 
 import contact_map as cm
+import plots
 
 Entrez.email = "ferran.muinos@gmail.com"
 Entrez.tool = "cozmic.py"
@@ -97,31 +97,17 @@ def filter_ids(ids, key):
     return map(lambda x: x[key], ids)
 
 
-def pdb_download(code, path=None):
-    """Downloads the structure of the pdb on a file.
-
-    Returns the file name where it is stored"""
-    logging.info("Downloading pdb %s.", code)
-    logging.captureWarnings(True)
-    pdbl = PDBList(obsolete_pdb=os.getcwd())
-    if path is None:
-        file = pdbl.retrieve_pdb_file(code)
-    else:
-        file = pdbl.retrieve_pdb_file(code, pdir=path)
-    logging.captureWarnings(False)
-    return file
-
-
 def local_blast(query, blast_type, db, remote=True, **kwargs):
     """Function to run with the local blast program"""
     logging.info("Running blast locally with {} and {}".format(query, db))
     if remote:
         blast_cline = NcbiblastpCommandline(query=query, db=db,
-                                             remote=True, out="blast.out",
-                                             outfmt="5", evalue=0.001, **kwargs)
+                                            remote=True, out="blast.out",
+                                            outfmt="5", evalue=0.001, **kwargs)
     else:
         blast_cline = NcbiblastpCommandline(query=query, db=db, outfmt="5",
-                                             out="blast.out", evalue=0.001, **kwargs)
+                                            out="blast.out",
+                                            evalue=0.001, **kwargs)
     print(blast_cline)
     stdout, stderr = blast_cline()
     logging.debug(stderr)
@@ -132,8 +118,9 @@ def local_blast(query, blast_type, db, remote=True, **kwargs):
 
 if __name__ == "__main__":
     msg = 'Runs blast online.'
+    args_helper = argparse.ArgumentDefaultsHelpFormatter
     argparser = argparse.ArgumentParser(description=msg,
-                        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+                                        formatter_class=args_helper)
 
     argparser.add_argument("input", help="Id of the sequence or file ")
     argparser.add_argument("output_file", help="Output file")
@@ -163,7 +150,7 @@ if __name__ == "__main__":
 
     for pdb in ides_pdb:
         try:
-            pdb_file = pdb_download(pdb, os.getcwd())
+            pdb_file = plots.pdb_download(pdb, os.getcwd())
         except urllib.error.URLError:
             pass
         except ftplib.error_perm:

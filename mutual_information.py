@@ -9,11 +9,11 @@ Created on Mar 7, 2016
 """
 # standard modules
 import argparse
-import numpy as np
 import copy
 import math
 import logging
 
+import numpy as np
 
 # Biopython modules
 from Bio import AlignIO
@@ -379,8 +379,9 @@ def retrieve_all_positions(matrix, gap_list, extreme_list):
 
 if __name__ == "__main__":
     msg = 'Runs the computations related to zMIc'
+    args_helper = argparse.ArgumentDefaultsHelpFormatter
     argparser = argparse.ArgumentParser(description=msg,
-                formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+                                        formatter_class=args_helper)
     # compulsory input
     argparser.add_argument("i", help="MSA file")
     argparser.add_argument("id", help="Target identifier")

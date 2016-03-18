@@ -32,6 +32,7 @@ import mutual_information as mut
 import msa_caller as msa
 import blast as blst
 import plots
+import modeller_caller as mc
 
 # Entrez inputs
 Entrez.email = "ferran.muinos@gmail.com"
@@ -128,7 +129,7 @@ if __name__ == '__main__':
                       atoms.""",
                       type=int,
                       default=6)
-         
+
     args = argparser.parse_args()
 
     logging.basicConfig(filename='cozmic.log', level=int(100/(args.d*10)))
@@ -145,14 +146,14 @@ if __name__ == '__main__':
         else:
             pdbl = PDBList()
             try:
-                pdbpath = pdbl.retrieve_pdb_file(args.i)
+                pdbpath = plots.pdb_download(args.i, os.getcwd())
             except:
-                sys.stderr.write("""exception: make sure your query format is correct.\n""")
+                raise FileExistsError("make sure your query format is correct")
         structure = parser.get_structure("cozmic_pdb_query", pdbpath)
         residues = cm.filter_residues(structure)
         s = ""
-        for i in range(len(residues)):
-            s += SCOPData.protein_letters_3to1.get(residues[i].get_resname(), 'X')
+        for residue in range(residues):
+            s += SCOPData.protein_letters_3to1.get(residue.get_resname(), 'X')
         seq = Seq(s, generic_protein)
         sys.stderr.write("Protein sequence:%s\n" % seq)
         # Compute distances and contact between residues
@@ -211,4 +212,11 @@ if __name__ == '__main__':
         plots.plot_twin_curves(cutoff_list, hit_list, precision_list)
         # Leo's function here!
     elif args.pir:
-        pass
+        env = mc.env_mod()  # Some variables needed for the modeller
+        modeler = mc.modeller_caller(env)
+        # Convert the fasta alignment in pir format
+        if not args.fasta and not args.pir:
+            raise argparser.error("Required a fasta or a pir alignment")
+        elif args.fasta:
+            modeler.convert_ali(args.fasta, args.pir)
+        modeler.modelize(args.pir, args.seq, args.models)

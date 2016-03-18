@@ -18,9 +18,6 @@ from Bio.PDB.PDBParser import PDBParser
 import plots
 
 
-fmt = """%(asctime)s - %(filename)s - %(funcName)s - %(levelname)s
-     - %(message)s"""
-
 def calc_residue_dist(residue_one, residue_two, atom):
     """Returns the distance between two residues between the selected atom."""
     msg = "Calculating distance between {} {} and {} {} at {} atom."
@@ -136,13 +133,14 @@ def main(file, atom, CAd=15, CBd=12, mind=6):
     name_bin = plots.plot_matrix_binary(cont_matrix, name_f, title_cont, atom)
     logging.info("Contact map %s created", name_bin)
     logging.captureWarnings(False)
-
+    
     return(dist_matrix, cont_matrix)
 
 if __name__ == "__main__":
 
     logging.basicConfig(filename='contact_map.log', level=logging.DEBUG)
-    
+    fmt = """%(asctime)s - %(filename)s - %(funcName)s - %(levelname)s
+     - %(message)s"""
     formatter = logging.Formatter(fmt)
     msg = 'A module that calculates distance map'
     args_helper = argparse.ArgumentDefaultsHelpFormatter
@@ -170,19 +168,5 @@ if __name__ == "__main__":
     args = argparser.parse_args()
 
     main(args.file, args.a, args.CA, args.CB, args.min)
-#     dist = {"CA": args.CA, "CB": args.CB, "min": args.min}
-#     base = os.path.basename(args.file)
-#     name_f = os.path.splitext(base)[0]
-#     parser = PDBParser(PERMISSIVE=1)
-#     logging.captureWarnings(True)
-# 
-#     structure = parser.get_structure("test", args.file)
-# 
-#     residues = filter_residues(structure)
-#     dist_matrix = calc_dist_matrix(residues, args.a)
-#     title_dist = 'Distances of the file {}'.format(name_f)
-#     plots.plot_heatmap(dist_matrix, name_f, title_dist, args.a)
-#     cont_matrix = contact_map(dist_matrix, args.a, dist)
-#     title_cont = 'Contacts of the file {}'.format(name_f)
-#     plots.plot_matrix_binary(cont_matrix, name_f, title_cont, args.a)
-#     logging.captureWarnings(False)
+    logging.info("Ended program")
+    exit(0)

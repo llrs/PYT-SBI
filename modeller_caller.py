@@ -19,7 +19,8 @@ from Bio import SeqIO
 
 import modeller.scripts
 import modeller.automodel
-from Bio.PDB import PDBList
+
+import plots
 
 
 # Code from https://salilab.org/archives/modeller_usage/2015/msg00043.html
@@ -44,24 +45,6 @@ class env_mod(modeller.environ):
             super(env_mod, self)
 
 env = env_mod()  # Some variables needed for the modeller
-
-
-def pdb_download(code, path=None):
-    """Downloads the structure of the pdb on a file.
-
-    cod is the pdb code of the structure
-    path is the localization where it will be downloaded
-
-    Returns the file name where it is stored"""
-    logging.info("Downloading pdb %s.", code)
-    logging.captureWarnings(True)
-    pdbl = PDBList(obsolete_pdb=os.getcwd())
-    if path is None:
-        file = pdbl.retrieve_pdb_file(code)
-    else:
-        file = pdbl.retrieve_pdb_file(code, pdir=path)
-    logging.captureWarnings(False)
-    return file
 
 
 class modeller_caller(object):
@@ -99,7 +82,7 @@ class modeller_caller(object):
             # Download the pdb to build the model
             # modeller search for all the posible names of the file
             try:
-                pdb = pdb_download(pdb_id, os.getcwd())
+                pdb = plots.pdb_download(pdb_id, os.getcwd())
             except urllib.error.URLError:
                 pass
             except ftplib.error_perm:
@@ -176,9 +159,10 @@ class modeller_caller(object):
         in the alignment file
         seq is the sequence we want to create the structure"""
         logging.captureWarnings(True)
+        assesment = modeller.automodel.assess.DOPE
         a = modeller.automodel.automodel(self.env, alnfile=alig_pir,
                                          knowns=known, sequence=seq,
-                                assess_methods=modeller.automodel.assess.DOPE)
+                                         assess_methods=assesment)
 
         a.starting_model = 1
         a.ending_model = 5
@@ -189,8 +173,9 @@ class modeller_caller(object):
 
 if __name__ == "__main__":
     msg = 'Creates models of the sequences'
+    args_helper = argparse.ArgumentDefaultsHelpFormatter
     argparser = argparse.ArgumentParser(description=msg,
-                        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+                                        formatter_class=args_helper)
 
     argparser.add_argument("seq", help="Name of the sequence to analyse")
     argparser.add_argument("models", help="Models of the file")
@@ -198,7 +183,7 @@ if __name__ == "__main__":
     argparser.add_argument("-fasta",
                            help="File with sequences in fasta format")
     args = argparser.parse_args()
-    env = modeller.environ()  # Some variables needed for the modeller
+    env = env_mod()  # Some variables needed for the modeller
     modeler = modeller_caller(env)
 
     # Convert the fasta alignment in pir format

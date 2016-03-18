@@ -5,11 +5,15 @@ Created on Mar 7, 2016
 @author: Leo, Lluís, Ferran
 """
 # standard modules
+import logging
+import os
+
 import matplotlib.pyplot as plt
 import numpy as np
-import logging
 
 # non-standard modules
+from Bio.PDB import PDBList
+
 import mutual_information as mut
 
 
@@ -81,7 +85,7 @@ def precision_analysis(zMIc_m, cont_m, gapped_list, mm, l=0.0, h=3.0, num=60):
     precision_list = []
     for cutoff in np.linspace(l, h, num):
         cutoff_list.append(cutoff)
-        tmatrix = mut.get_level_matrix(zMIc_matrix, cutoff)
+        tmatrix = mut.get_level_matrix(zMIc_m, cutoff)
         hits = mut.matrix_hits(tmatrix)
         hit_list.append(hits)
         cm_residue_pairs = mut.retrieve_residue_positions(tmatrix, gapped_list,
@@ -89,11 +93,29 @@ def precision_analysis(zMIc_m, cont_m, gapped_list, mm, l=0.0, h=3.0, num=60):
         print(cm_residue_pairs)
         count = 0
         for rp in cm_residue_pairs:
-            count += cont_matrix[rp[0], rp[1]]
+            count += cont_m[rp[0], rp[1]]
         precision_list.append(count/hits)
     else:
         return(cutoff_list, hit_list, precision_list)
 
 
+def pdb_download(code, path=None):
+    """Downloads the structure of the pdb on a file.
+
+    cod is the pdb code of the structure
+    path is the localization where it will be downloaded
+
+    Returns the file name where it is stored"""
+
+    logging.info("Downloading pdb %s.", code)
+
+    logging.captureWarnings(True)
+    pdbl = PDBList(obsolete_pdb=os.getcwd())
+    if path is None:
+        file = pdbl.retrieve_pdb_file(code)
+    else:
+        file = pdbl.retrieve_pdb_file(code, pdir=path)
+    logging.captureWarnings(False)
+    return file
 if __name__ == "__main__":
     pass
