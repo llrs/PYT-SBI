@@ -102,30 +102,6 @@ def contact_map(distance_map, atom, dist=None):
     return(answer)
 
 
-def plot_distance(distances, name_file, title, option):
-    """Plots the distances between the residues."""
-    logging.info("Plotting the distance map for {}".format(name_file))
-    plt.imshow(distances, interpolation='none')
-    heatmap = plt.pcolormesh(distances)
-    plt.title(title)
-    legend = plt.colorbar(heatmap)
-    legend.set_label("Angstroms")
-    plt.savefig('distance_map_{}_{}.png'.format(name_file, option),
-                format="png")
-
-
-def plot_contacts(contacts, name_file, title, option):
-    """Plots the contact map between residues"""
-    logging.info("Plotting the contact map for {}".format(name_file))
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    fig.suptitle(title)
-    ax.imshow(contacts, aspect='auto',
-              cmap=plt.cm.gray, interpolation='nearest')
-    plt.savefig("contact_map_{}_{}.png".format(name_file, option),
-                format="png")
-
-
 if __name__ == "__main__":
 
     logging.basicConfig(filename='contact_map.log', level=logging.DEBUG)
@@ -166,7 +142,7 @@ if __name__ == "__main__":
     residues = filter_residues(structure)
     dist_matrix = calc_dist_matrix(residues, args.a)
     title_dist = 'Distances of the file {}'.format(name_f)
-    plots.plot_distance(dist_matrix, name_f, title_dist, args.a)
+    plots.plot_heatmap(dist_matrix, name_f, title_dist, args.a)
     cont_matrix = contact_map(dist_matrix, args.a, dist)
     title_cont = 'Contacts of the file {}'.format(name_f)
     plots.plot_contacts(cont_matrix, name_f, title_cont, args.a)

@@ -77,7 +77,7 @@ if __name__ == '__main__':
     real.add_argument("-f", help="""If present, then filter the BLAST
                       output by genus for attaining non-redundancy;
                       otherwise filter by species.""",
-                      action='store_false', 
+                      action='store_false',
                       default=True)
     # argument options for msa and mut module functions
     real.add_argument("-g", help="""If present, then prune those
@@ -181,9 +181,11 @@ if __name__ == '__main__':
         MIc_matrix = MI_matrix - ncps_array
         zMIc_matrix = mut.standardise_matrix(MIc_matrix)
         # plot distance, contact, MIc Z-scores and its associated level matrix
-        plots.plot_matrix_heatmap(dist_matrix, "Distance {}".format(args.a))
+        title_dist = 'Distances of the file {}'.format(args.i)
+        plots.plot_heatmap(dist_matrix, args.i, title_dist, args.a)
         plots.plot_matrix_binary(cont_matrix, "Contact {}".format(args.a))
-        plots.plot_matrix_heatmap(zMIc_matrix, "zMIc")
+        title_zmic = 'zMic of the file {}'.format(args.i)
+        plots.plot_heatmap(zMIc_matrix, args.i, title_zmic, args.low)
         tmatrix = mut.get_level_matrix(zMIc_matrix, 2)
         plots.plot_matrix_binary(tmatrix, "zMIc with L>2")
         # plot level-precision analysis and CM-distance analysis

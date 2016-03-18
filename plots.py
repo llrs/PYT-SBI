@@ -10,11 +10,10 @@ import numpy as np
 import logging
 
 # non-standard modules
-import contact_map as cm
 import mutual_information as mut
 
 
-def plot_distance(distances, name_file, title, option):
+def plot_heatmap(distances, name_file, title, option):
     """Plots the distances between the residues."""
     logging.info("Plotting the distance map for {}".format(name_file))
     plt.imshow(distances, interpolation='none')
@@ -22,7 +21,7 @@ def plot_distance(distances, name_file, title, option):
     plt.title(title)
     legend = plt.colorbar(heatmap)
     legend.set_label("Angstroms")
-    plt.savefig('distance_map_{}_{}.png'.format(name_file, option),
+    plt.savefig('heatmap_{}_{}.png'.format(name_file, option),
                 format="png")
 
 
@@ -40,6 +39,7 @@ def plot_contacts(contacts, name_file, title, option):
 
 def plot_matrix_heatmap(matrix, keyword):
     """Plots a matrix of values as a heatmap"""
+    logging.info("Plotting the heatmap for %s", keyword)
     imgplot = plt.imshow(matrix, cmap='Blues', interpolation='none')
     plt.title('{} heatmap'.format(keyword))
     legend = plt.colorbar(imgplot)

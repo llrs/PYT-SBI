@@ -23,6 +23,7 @@ import contact_map as cm
 import mutual_information as mut
 import msa_caller as msa
 import blast as blst
+import plots
 
 
 def plot_twin_curves(cutoff_list, hit_list, precision_list):
@@ -129,4 +130,4 @@ if __name__ == '__main__':
                 pass
         precision_list.append(count/hits)
     # produce the plot
-    plot_twin_curves(cutoff_list, hit_list, precision_list)
+    plots.plot_twin_curves(cutoff_list, hit_list, precision_list)
