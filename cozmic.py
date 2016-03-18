@@ -15,7 +15,6 @@ Created on Mar 7, 2016
 import argparse
 import logging
 import os
-import sys
 
 # Biopython modules
 from Bio.PDB import PDBList
@@ -25,6 +24,7 @@ from Bio.Seq import Seq
 from Bio import SeqIO
 from Bio import Entrez
 from Bio.Data import SCOPData
+from Bio import AlignIO
 
 # Non-standard modules
 import contact_map as cm
@@ -32,7 +32,8 @@ import mutual_information as mut
 import msa_caller as msa
 import blast as blst
 import plots
-#import modeller_caller as mc
+import modeller_caller as mc
+from modeller import environ
 
 # Entrez inputs
 Entrez.email = "ferran.muinos@gmail.com"
@@ -137,14 +138,26 @@ if __name__ == '__main__':
 
     args = argparser.parse_args()
 
-    logging.basicConfig(filename='cozmic.log', level=int(100/(args.d*10)))
     fmt = """%(asctime)s - %(filename)s - %(funcName)s - %(levelname)s
       - %(message)s"""
-    formatter = logging.Formatter(fmt)
+    logging.basicConfig(filename='cozmic.log', level=int(100/(args.d*10)),
+                    format=fmt)
 
     print("You are currently running the program with: ", args)
-    if args.input:
+    try:
+        args.input
+    except AttributeError:
+        env = environ()  # Some variables needed for the modeller
+        modeler = mc.modeller_caller(env)
+        # Convert the fasta alignment in pir format
+        if not args.fasta and not args.pir:
+            raise argparser.error("Required a fasta or a pir alignment")
+        elif args.fasta:
+            modeler.convert_ali(args.fasta, args.pir)
+        modeler.modelize(args.pir, args.seq, args.models)
+    else:
         # Retrieve the PDB structure, filter and get sequence
+        logging.captureWarnings(True)
         parser = PDBParser(PERMISSIVE=1)
         if os.path.isfile(args.input):
             pdbpath = args.input
@@ -167,6 +180,7 @@ if __name__ == '__main__':
         # Set up the files for calling BLAST
         blast_query_name = "cozmic_blast_query.fa"
         blast_out_name = "cozmic_blast.out"
+
         fd = open(blast_query_name, "w")
         fd.write(">%s\n%s" % ("cozmic_blast_query", seq))
         fd.close()
@@ -180,11 +194,15 @@ if __name__ == '__main__':
                                       args.db, args.s)
         ides = blst.analyze_blast_result(blast_result, args.f)
         ids = list(blst.filter_ids(ides, "gi"))
+        if len(ids) <= 5:
+            msg_err = "Seems that a bad output on blast generated no hits."
+            raise ValueError(msg_err)
+        print(len(ids), ids)
         SeqIO.write(blst.retrive_sequence(ids), file_out, "fasta")
         file_out.close()
         # MSA: align the query to its homologs with the method of choice
         msa.call_msa_method(args.m, blast_out_name, "aligned.fa", "fasta")
-        alignment = mut.AlignIO.read("aligned.fa", "fasta")
+        alignment = AlignIO.read("aligned.fa", "fasta")
         # Prepare the alignment for MIc computations:
         # prune high and low entropy columns
         edited = mut.prune_id_gaps(alignment, "cozmic_blast_query")
@@ -194,7 +212,9 @@ if __name__ == '__main__':
         edited = mut.prune(edited, gapped_list)
         (minlist, maxlist) = mut.get_extreme_columns(edited, args.low,
                                                      args.high, args.b)
-        edited = mut.prune(edited, minlist+maxlist)
+        mm = minlist + maxlist
+        edited = mut.prune(edited, mm)
+#         print(len(edited), len(mm))
         # compute MI, NCPS, MIc, Z-score MIc + its associated level matrix
         MI_matrix = mut.mutual_info_matrix(edited, args.b)
         ncps_array = mut.NCPS_matrix(edited, args.b)
@@ -203,27 +223,31 @@ if __name__ == '__main__':
 
         # plot distance, contact, MIc Z-scores and its associated level matrix
         title_dist = 'Distance of the file {}'.format(args.input)
-        plots.plot_heatmap(dist_matrix, args.input+"_d", title_dist, args.a, "Angstroms")
+        plots.plot_heatmap(dist_matrix, args.input+"_d", title_dist,
+                           args.a, "Angstroms")
 
         # Plot contacts based on distance
         title_binary = 'Contacts of the file {}'.format(args.input)
-        plots.plot_matrix_binary(cont_matrix, args.input+"_c", title_binary, args.a)
+        plots.plot_matrix_binary(cont_matrix, args.input+"_c",
+                                 title_binary, args.a)
 
         # Plots zMIc
         title_zmic = 'zMic values of the file {}'.format(args.input)
-        plots.plot_heatmap(zMIc_matrix, args.input+"_z", title_zmic, args.low, "zMIc")
+        plots.plot_heatmap(zMIc_matrix, args.input+"_z",
+                           title_zmic, args.low, "zMIc")
         tmatrix = mut.get_level_matrix(zMIc_matrix, 2)
 
         # Calculates the default predicted contacts and store them in the file
-        mm = minlist + maxlist
+
         std_cont = mut.retrieve_residue_positions(tmatrix, gapped_list, mm)
         name_out = "predicted_contacts_{}.out"
         with open(name_out.format(args.input), "w") as out_f:
             out_f.write(repr(std_cont))
 
         # Plots the default contacts
-        title_zmic_b = "Predicted contacts with zMic > 2 of the file".format(args.input)
-        plots.plot_matrix_binary(tmatrix, args.input+"_p", title_zmic_b, args.a)
+        title_zmic_b = "Predicted contacts with zMic > 2 of the file"
+        plots.plot_matrix_binary(tmatrix, args.input+"_p",
+                                 title_zmic_b.format(args.input), args.a)
 
         # plot level-precision analysis and CM-distance analysis
         cutoff_list, hit_list, precision_list = plots.precision_analysis(
@@ -233,16 +257,7 @@ if __name__ == '__main__':
 
         pairs = mut.retrieve_all_positions(zMIc_matrix, gapped_list, mm)
         list_dist, list_zMIc = plots.distances_zMIcs(pairs, dist_matrix)
-        print(list_dist)
-        print(list_zMIc)
+#         print(list_dist)
+#         print(list_zMIc)
         #plots.plot_distance_zMIc(list_dist, list_zMIc, args.input)
-    elif args.pir:
-        pass
-        #env = mc.env_mod()  # Some variables needed for the modeller
-        #modeler = mc.modeller_caller(env)
-        # Convert the fasta alignment in pir format
-        #if not args.fasta and not args.pir:
-        #    raise argparser.error("Required a fasta or a pir alignment")
-        #elif args.fasta:
-        #    modeler.convert_ali(args.fasta, args.pir)
-        #modeler.modelize(args.pir, args.seq, args.models)
+        logging.captureWarnings(False)

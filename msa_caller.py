@@ -51,10 +51,10 @@ def call_msa_method(method, in_file, out_file, output_format=None):
     return(stdout)
 
 if __name__ == '__main__':
-    logging.basicConfig(filename='msa_caller.log', level=logging.DEBUG)
     fmt = """%(asctime)s - %(filename)s - %(funcName)s - %(levelname)s
      - %(message)s"""
-    formatter = logging.Formatter(fmt)
+    logging.basicConfig(filename='msa_caller.log', level=logging.DEBUG,
+                        format=fmt)
 
     msg = 'Carries out a MSA'
     arg_helper = argparse.ArgumentDefaultsHelpFormatter

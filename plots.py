@@ -122,7 +122,7 @@ def pdb_download(code, path=None):
 
 
 def distances_zMIcs(dict_pairs, dist_matrix):
-    """Relates the distance_matrix with te zMIc matrix."""
+    """Relates the distance_matrix with the zMIc matrix."""
 
     logging.info("Relating distances with zMIc values.")
     print(dict_pairs)
