@@ -129,7 +129,7 @@ if __name__ == "__main__":
     argparser.add_argument("-min",
                            help="""Set the minimal threshold distance""",
                            type=int,
-                           default=16)
+                           default=6)
     args = argparser.parse_args()
     dist = {"CA": args.CA, "CB": args.CB, "min": args.min}
     base = os.path.basename(args.file)

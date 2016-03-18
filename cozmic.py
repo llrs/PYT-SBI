@@ -120,7 +120,7 @@ if __name__ == '__main__':
                       help="""Set the minimal threshold distance between
                       atoms.""",
                       type=int,
-                      default=16)
+                      default=6)
     args = argparser.parse_args()
     print(args)
     if args.i:
