@@ -62,7 +62,7 @@ if __name__ == '__main__':
     model.add_argument("-pir", help="Name of the file in pir format")
     model.add_argument("-fasta",
                        help="File with sequences in fasta format")
-    real.add_argument("i", help="Target sequence id or filename")
+    real.add_argument("input", help="Target sequence id or filename")
     # argument options for cm module functions
     real.add_argument("-a", help="""Aa atom to calculate distance with:
                       CA (alpha carbon), CB (beta carbon), min (minimum
@@ -70,6 +70,21 @@ if __name__ == '__main__':
                       residue).""",
                       choices=["CA", "CB", "min"],
                       default="min")
+    real.add_argument("-CA",
+                      help="""Set the threshold distance between Carbon alpha
+                      atoms.""",
+                      type=int,
+                      default=15)
+    real.add_argument("-CB",
+                      help="""Set the threshold distance between Carbon beta
+                      atoms.""",
+                      type=int,
+                      default=12)
+    real.add_argument("-min",
+                      help="""Set the minimal threshold distance between
+                      atoms.""",
+                      type=int,
+                      default=6)
     # argument options for blst module functions
     real.add_argument("-blast", help="""Type of BLAST search to be
                       performed. Notice that blastp, blast and tblastn
@@ -87,9 +102,9 @@ if __name__ == '__main__':
                       resulting from the BLAST search of homologs.""",
                       type=int,
                       default=200)
-    real.add_argument("-f", help="""If present, then filter the BLAST
+    real.add_argument("-f", help="""If present, then don't filter the BLAST
                       output by genus for attaining non-redundancy;
-                      otherwise filter by species.""",
+                      otherwise filter by genus.""",
                       action='store_false',
                       default=True)
     # argument options for msa and mut module functions
@@ -119,21 +134,6 @@ if __name__ == '__main__':
                       help="""Method of choice for carrying out MSA.""",
                       default="clustalw",
                       choices=["clustalw", "muscle", "t_coffee"])
-    real.add_argument("-CA",
-                      help="""Set the threshold distance between Carbon alpha
-                      atoms.""",
-                      type=int,
-                      default=15)
-    real.add_argument("-CB",
-                      help="""Set the threshold distance between Carbon beta
-                      atoms.""",
-                      type=int,
-                      default=12)
-    real.add_argument("-min",
-                      help="""Set the minimal threshold distance between
-                      atoms.""",
-                      type=int,
-                      default=6)
 
     args = argparser.parse_args()
 
@@ -143,15 +143,15 @@ if __name__ == '__main__':
     formatter = logging.Formatter(fmt)
 
     print("You are currently running the program with: ", args)
-    if args.i:
+    if args.input:
         # Retrieve the PDB structure, filter and get sequence
         parser = PDBParser(PERMISSIVE=1)
-        if os.path.isfile(args.i):
-            pdbpath = args.i
+        if os.path.isfile(args.input):
+            pdbpath = args.input
         else:
             pdbl = PDBList()
             try:
-                pdbpath = plots.pdb_download(args.i, os.getcwd())
+                pdbpath = plots.pdb_download(args.input, os.getcwd())
             except:
                 raise FileExistsError("make sure your query format is correct")
         structure = parser.get_structure("cozmic_pdb_query", pdbpath)
@@ -201,20 +201,21 @@ if __name__ == '__main__':
         MIc_matrix = MI_matrix - ncps_array
         zMIc_matrix = mut.standardise_matrix(MIc_matrix)
         # plot distance, contact, MIc Z-scores and its associated level matrix
-        title_dist = 'Distances of the file {}'.format(args.i)
-        plots.plot_heatmap(dist_matrix, args.i, title_dist, args.a)
-        title_binary = 'Distance contacts of the file {}'.format(args.i)
-        plots.plot_matrix_binary(cont_matrix, args.i, title_binary, args.a)
-        title_zmic = 'zMic of the file {}'.format(args.i)
-        plots.plot_heatmap(zMIc_matrix, args.i, title_zmic, args.low)
+        title_dist = 'Distances of the file {}'.format(args.input)
+        plots.plot_heatmap(dist_matrix, args.input, title_dist, args.a)
+        title_binary = 'Distance contacts of the file {}'.format(args.input)
+        plots.plot_matrix_binary(cont_matrix, args.input, title_binary, args.a)
+        title_zmic = 'zMic of the file {}'.format(args.input)
+        plots.plot_heatmap(zMIc_matrix, args.input, title_zmic, args.low)
         tmatrix = mut.get_level_matrix(zMIc_matrix, 2)
-        title_zmic_b = "zMic contacts  with L>2 of the file".format(args.i)
-        plots.plot_matrix_binary(tmatrix, args.i, title_zmic_b, args.a)
+        title_zmic_b = "zMic contacts  with L>2 of the file".format(args.input)
+        plots.plot_matrix_binary(tmatrix, args.input, title_zmic_b, args.a)
         # plot level-precision analysis and CM-distance analysis
         mm = minlist + maxlist
         (cutoff_list, hit_list, precision_list) = plots.precision_analysis(
         zMIc_matrix, cont_matrix, gapped_list, mm, 0.0, 3.0, 60)
-        plots.plot_twin_curves(cutoff_list, hit_list, precision_list, args.i)
+        plots.plot_twin_curves(cutoff_list, hit_list, precision_list,
+                               args.input)
         # Leo's function here!
     elif args.pir:
         env = mc.env_mod()  # Some variables needed for the modeller
