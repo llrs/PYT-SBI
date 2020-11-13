@@ -1,5 +1,5 @@
 # cozmic
-======
+
 Correlated mutations and distance correlations to predict Aa interactions
 
 Cozmic.py is a stand-alone program which has been fully developed and tested using Python version 3.4.3 and compatible modules.
@@ -35,7 +35,7 @@ Under the subcomand **real** we have the following arguments and options availab
   + -b: Base of the logarithm.
   + -low: Minimum entropy for the computation of MI.
   + -high: Maximum entropy for the computation of MI.
-  + -m: Program to produce the MSA options are (muscle)[http://www.ebi.ac.uk/Tools/msa/muscle/], (t-coffe)[http://tcoffee.crg.cat/] or (clustalw)[http://www.genome.jp/tools/clustalw/].
+  + -m: Program to produce the MSA options are [muscle](http://www.ebi.ac.uk/Tools/msa/muscle/), [t-coffe](http://tcoffee.crg.cat/) or [clustalw](http://www.genome.jp/tools/clustalw/).
 
 Under the **model** subcommand 
 + Required arguments:
@@ -134,6 +134,7 @@ consequently, the indexes used to label residues refer to the PDB structure, not
 protein sequence.
 
 #### Examples
+
 `> python3 contact_map.py pdb1cd8.ent`
 Will produce the following files 
 ```
