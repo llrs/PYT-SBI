@@ -9,10 +9,10 @@ setuptools.setup(
     author=["Lluís Revilla Sancho","Ferran Muiños"],
     author_email=["lluis.revilla@gmail.com","ferran.muinos@gmail.com"],
     description="Correlated mutations and distance correlations to predict aminoacid interactions.",
-    long_description=long_description,
+    long_description=open("README.md", "r").read(),
     long_description_content_type="text/markdown",
     url="https://github.com/llrs/PYT-SBI/",
-    packages=setuptools.find_packages(),
+    packages=["cozmic"],
     license="MIT",
     classifiers=[
         "Programming Language :: Python :: 3",
